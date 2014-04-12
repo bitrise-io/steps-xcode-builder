@@ -35,6 +35,8 @@ curl -silent -o $CONCRETE_PROVISION_PATH $CONCRETE_PROVISION_URL
 if [ ! -d "dirname ${CONCRETE_CERTIFICATE_PATH}" ]; then mkdir -p $(dirname ${CONCRETE_CERTIFICATE_PATH}); fi
 curl -silent -o $CONCRETE_CERTIFICATE_PATH $CONCRETE_CERTIFICATE_URL
 
+$CONCRETE_STEP_DIR/keychain.sh
+
 # Start the build
 xcodebuild \
   $CONCRETE_PROJECT_ACTION \
