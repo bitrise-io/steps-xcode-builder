@@ -29,9 +29,11 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
 fi
 
 # Get provisioning profile
-curl -o $CONCRETE_PROVISION_PATH $CONCRETE_PROVISION_URL
+if [ ! -d "dirname ${CONCRETE_PROVISION_PATH}" ]; then mkdir -p $(dirname ${CONCRETE_PROVISION_PATH}); fi
+curl -silent -o $CONCRETE_PROVISION_PATH $CONCRETE_PROVISION_URL
 # Get certificate
-curl -o $CONCRETE_CERTIFICATE_PATH $CONCRETE_CERTIFICATE_URL
+if [ ! -d "dirname ${CONCRETE_CERTIFICATE_PATH}" ]; then mkdir -p $(dirname ${CONCRETE_CERTIFICATE_PATH}); fi
+curl -silent -o $CONCRETE_CERTIFICATE_PATH $CONCRETE_CERTIFICATE_URL
 
 # Start the build
 xcodebuild \
@@ -43,3 +45,7 @@ xcodebuild \
   CODE_SIGN_IDENTITY="" \
   PROVISIONING_PROFILE="" \
   OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN_PATH"
+
+# Remove downloaded files
+rm $CONCRETE_PROVISION_PATH
+rm $CONCRETE_CERTIFICATE_PATH
