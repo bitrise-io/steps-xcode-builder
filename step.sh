@@ -4,9 +4,9 @@ echo "$ cd $CONCRETE_SOURCE_DIR"
 cd $CONCRETE_SOURCE_DIR
 
 if [[ $CONCRETE_PROJECT_PATH == *".xcodeproj" ]]; then
-  export CONCRETE_PROJECT_ACTION = "-project $CONCRETE_PROJECT_PATH"
+  export CONCRETE_PROJECT_ACTION="-project $CONCRETE_PROJECT_PATH"
 elif [[ $CONCRETE_PROJECT_PATH == *".xcworkspace" ]]; then
-  export CONCRETE_PROJECT_ACTION = "-workspace $CONCRETE_PROJECT_PATH"
+  export CONCRETE_PROJECT_ACTION="-workspace $CONCRETE_PROJECT_PATH"
 else
   echo "Failed to get valid project file: $CONCRETE_PROJECT_PATH"
   exit 1
