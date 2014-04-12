@@ -12,6 +12,6 @@ else
   exit 1
 fi
 
-if [[ -v CONCRETE_ACTION_BUILD ]]; then
+if [ -n "$CONCRETE_ACTION_BUILD" ]; then
   xcodebuild $CONCRETE_PROJECT_ACTION -scheme $CONCRETE_SCHEME
 fi
