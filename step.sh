@@ -13,5 +13,19 @@ else
 fi
 
 if [ -n "$CONCRETE_ACTION_BUILD" ]; then
-  xcodebuild $CONCRETE_PROJECT_ACTION -scheme $CONCRETE_SCHEME
+  export CONCRETE_BUILD_ACTION="clean build"
 fi
+
+if [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
+  export CONCRETE_BUILD_ACTION="clean analyze"
+fi
+
+# if [ -n "$CONCRETE_ACTION_TEST" ]; then
+#   export CONCRETE_BUILD_ACTION="clean test"
+# fi
+
+if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
+  export CONCRETE_BUILD_ACTION="clean archive"
+fi
+
+xcodebuild $CONCRETE_PROJECT_ACTION -scheme $CONCRETE_SCHEME $CONCRETE_BUILD_ACTION OBJROOT=$CONCRETE_OBJ_ROOT SYMROOT=$CONCRETE_SYM_ROOT
