@@ -37,6 +37,15 @@ curl -so $CONCRETE_CERTIFICATE_PATH $CONCRETE_CERTIFICATE_URL
 
 $CONCRETE_STEP_DIR/keychain.sh add
 
+# Get UUID & install provision profile
+uuid_key=$(grep -aA1 UUID $CONCRETE_PROVISION_PATH)
+export PROFILE_UUID=$([[ $uuid_key =~ ([-A-Z0-9]{36}) ]] && echo ${BASH_REMATCH[1]})
+if [ ! -d "$CONCRETE_LIBRARY_PATH" ]; then mkdir -p "$CONCRETE_LIBRARY_PATH"; fi
+cp $CONCRETE_PROVISION_PATH "$CONCRETE_LIBRARY_PATH/$PROFILE_UUID.mobileprovision"
+
+# Get identities
+$CONCRETE_STEP_DIR/keychain.sh get-identity
+
 # Start the build
 xcodebuild \
   $CONCRETE_PROJECT_ACTION \
@@ -44,11 +53,14 @@ xcodebuild \
   $CONCRETE_BUILD_ACTION \
   OBJROOT=$CONCRETE_OBJ_ROOT \
   SYMROOT=$CONCRETE_SYM_ROOT \
-  CODE_SIGN_IDENTITY="" \
-  PROVISIONING_PROFILE="" \
+  CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
+  PROVISIONING_PROFILE="$PROFILE_UUID" \
   OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN_PATH"
 
-  $CONCRETE_STEP_DIR/keychain.sh remove
+unset UUID
+rm "$CONCRETE_LIBRARY_PATH/$PROFILE_UUID.mobileprovision"
+$CONCRETE_STEP_DIR/keychain.sh remove
+
 
 # Remove downloaded files
 rm $CONCRETE_PROVISION_PATH
