@@ -30,10 +30,10 @@ fi
 
 # Get provisioning profile
 if [ ! -d "dirname ${CONCRETE_PROVISION_PATH}" ]; then mkdir -p $(dirname ${CONCRETE_PROVISION_PATH}); fi
-curl -silent -o $CONCRETE_PROVISION_PATH $CONCRETE_PROVISION_URL
+curl -so $CONCRETE_PROVISION_PATH $CONCRETE_PROVISION_URL
 # Get certificate
 if [ ! -d "dirname ${CONCRETE_CERTIFICATE_PATH}" ]; then mkdir -p $(dirname ${CONCRETE_CERTIFICATE_PATH}); fi
-curl -silent -o $CONCRETE_CERTIFICATE_PATH $CONCRETE_CERTIFICATE_URL
+curl -so $CONCRETE_CERTIFICATE_PATH $CONCRETE_CERTIFICATE_URL
 
 $CONCRETE_STEP_DIR/keychain.sh add
 
