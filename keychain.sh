@@ -1,4 +1,4 @@
-if [ $1 == "add"]; then
+if [[ $1 == "add" ]]; then
   export SAVED_KEYCHAINS=$(security list-keychain)
 
   # Create the keychain
@@ -12,10 +12,8 @@ if [ $1 == "add"]; then
 
   # Unlock keychain
   security unlock-keychain -p $CONCRETE_KEYCHAIN_PASSPHRASE $CONCRETE_KEYCHAIN_PATH
-elif [ $1 == "remove" ]; then
+elif [[ $1 = "remove" ]]; then
   security delete-keychain $CONCRETE_KEYCHAIN_PATH
 
   unset SAVED_KEYCHAINS
-else
-  # Do nothing
 fi
