@@ -35,7 +35,7 @@ curl -silent -o $CONCRETE_PROVISION_PATH $CONCRETE_PROVISION_URL
 if [ ! -d "dirname ${CONCRETE_CERTIFICATE_PATH}" ]; then mkdir -p $(dirname ${CONCRETE_CERTIFICATE_PATH}); fi
 curl -silent -o $CONCRETE_CERTIFICATE_PATH $CONCRETE_CERTIFICATE_URL
 
-$CONCRETE_STEP_DIR/keychain.sh
+$CONCRETE_STEP_DIR/keychain.sh add
 
 # Start the build
 xcodebuild \
@@ -47,6 +47,8 @@ xcodebuild \
   CODE_SIGN_IDENTITY="" \
   PROVISIONING_PROFILE="" \
   OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN_PATH"
+
+  $CONCRETE_STEP_DIR/keychain.sh remove
 
 # Remove downloaded files
 rm $CONCRETE_PROVISION_PATH
