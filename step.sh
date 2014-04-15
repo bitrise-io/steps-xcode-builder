@@ -57,10 +57,27 @@ xcodebuild \
   PROVISIONING_PROFILE="$PROFILE_UUID" \
   OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN_PATH"
 
+if [ $? -eq 0 ]; then
+  export XCODEBUILD_STATUS="succeeded"
+else
+  export XCODEBUILD_STATUS="failed"
+fi
+
+if [ -n "$CONCRETE_ACTION_BUILD" ]; then 
+  export CONCRETE_BUILD_STATUS=$XCODEBUILD_STATUS
+fi
+
+if [ -n "$CONCRETE_ACTION_ANALYZE" ]; then 
+  export CONCRETE_ANALYZE_STATUS=$XCODEBUILD_STATUS
+fi
+
+if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then 
+  export CONCRETE_ARCHIVE_STATUS=$XCODEBUILD_STATUS
+fi
+
 unset UUID
 rm "$CONCRETE_LIBRARY_PATH/$PROFILE_UUID.mobileprovision"
 $CONCRETE_STEP_DIR/keychain.sh remove
-
 
 # Remove downloaded files
 rm $CONCRETE_PROVISION_PATH
