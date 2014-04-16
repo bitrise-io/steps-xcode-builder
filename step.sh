@@ -20,7 +20,7 @@ if [ -n "$CONCRETE_ACTION_BUILD" ]; then
 fi
 
 if [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
-  export XCODEBUILD_ACTION="analyze"
+  export XCODEBUILD_ACTION="clean analyze"
 fi
 
 # if [ -n "$CONCRETE_ACTION_TEST" ]; then
@@ -29,7 +29,7 @@ fi
 
 if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
   export ARCHIVE_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.xcarchive"
-  export XCODEBUILD_ACTION="archive -archivePath $ARCHIVE_PATH"
+  export XCODEBUILD_ACTION="clean archive -archivePath $ARCHIVE_PATH"
   export EXPORT_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME"
 fi
 
