@@ -27,22 +27,22 @@ fi
 #   export XCODEBUILD_ACTION="clean test"
 # fi
 
-export ARCHIVE_PATH=$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.xcarchive
+export ARCHIVE_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.xcarchive"
 if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
   export XCODEBUILD_ACTION="archive -archivePath $ARCHIVE_PATH"
 fi
 
 if [ -n "$CONCRETE_ACTION_EXPORT_ARCHIVE" ]; then
-  export EXPORT_PATH=$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.ipa
+  export EXPORT_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.ipa"
   export XCODEBUILD_ACTION="-exportArchive"
 fi
 
 # Get provisioning profile
-export PROVISION_PATH=$CONCRETE_PROFILE_DIR/profile.mobileprovision
+export PROVISION_PATH="$CONCRETE_PROFILE_DIR/profile.mobileprovision"
 curl -so $PROVISION_PATH $CONCRETE_PROVISION_URL
 
 # Get certificate
-export CERTIFICATE_PATH=$CONCRETE_PROFILE_DIR/Certificate.p12
+export CERTIFICATE_PATH="$CONCRETE_PROFILE_DIR/Certificate.p12"
 curl -so $CERTIFICATE_PATH $CONCRETE_CERTIFICATE_URL
 
 $CONCRETE_STEP_DIR/keychain.sh add
@@ -68,7 +68,7 @@ if [ -n "$CONCRETE_ACTION_BUILD" ] || [ -n "$CONCRETE_ACTION_ANALYZE" ] || [ -n 
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN_PATH"
 fi
 
-if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
+if [ -n "$CONCRETE_ACTION_EXPORT_ARCHIVE" ]; then
   xcodebuild \
     $XCODEBUILD_ACTION \
     -exportFormat IPA \
