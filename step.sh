@@ -28,7 +28,7 @@ fi
 # fi
 
 if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
-  export CONCRETE_XCODEBUILD_ACTION="clean archive -archivePath $CONCRETE_DEPLOY_PATH/$CONCRETE_SCHEME"
+  export CONCRETE_XCODEBUILD_ACTION="clean archive -archivePath $CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME"
 fi
 
 # Get provisioning profile
