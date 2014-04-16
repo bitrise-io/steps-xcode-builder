@@ -30,7 +30,7 @@ fi
 if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
   export ARCHIVE_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.xcarchive"
   export XCODEBUILD_ACTION="archive -archivePath $ARCHIVE_PATH"
-  export EXPORT_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.ipa"
+  export EXPORT_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME"
 fi
 
 # Get provisioning profile
@@ -73,7 +73,7 @@ export CONCRETE_STATUS=$XCODEBUILD_STATUS
 if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ $XCODEBUILD_STATUS == "succeeded" ]]; then
   xcodebuild \
     -exportArchive \
-    -exportFormat IPA \
+    -exportFormat ipa \
     -archivePath "$ARCHIVE_PATH" \
     -exportPath "$EXPORT_PATH" \
     -exportWithOriginalSigningIdentity
