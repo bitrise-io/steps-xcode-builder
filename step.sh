@@ -70,7 +70,7 @@ fi
 export CONCRETE_STATUS=$XCODEBUILD_STATUS
 
 # Export ipa if everyting succeeded
-if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ XCODEBUILD_STATUS == "succeeded" ]]; then
+if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ $XCODEBUILD_STATUS == "succeeded" ]]; then
   xcodebuild \
     -exportArchive \
     -exportFormat IPA \
