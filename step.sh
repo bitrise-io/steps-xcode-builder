@@ -27,14 +27,10 @@ fi
 #   export XCODEBUILD_ACTION="clean test"
 # fi
 
-export ARCHIVE_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.xcarchive"
 if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
+  export ARCHIVE_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.xcarchive"
   export XCODEBUILD_ACTION="archive -archivePath $ARCHIVE_PATH"
-fi
-
-if [ -n "$CONCRETE_ACTION_EXPORT_ARCHIVE" ]; then
   export EXPORT_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.ipa"
-  export XCODEBUILD_ACTION="-exportArchive"
 fi
 
 # Get provisioning profile
@@ -66,22 +62,22 @@ if [ -n "$CONCRETE_ACTION_BUILD" ] || [ -n "$CONCRETE_ACTION_ANALYZE" ] || [ -n 
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN_PATH"
 fi
 
-if [ -n "$CONCRETE_ACTION_EXPORT_ARCHIVE" ]; then
-  xcodebuild \
-    $XCODEBUILD_ACTION \
-    -exportFormat IPA \
-    -archivePath "$ARCHIVE_PATH" \
-    -exportPath "$EXPORT_PATH" \
-    -exportWithOriginalSigningIdentity
-fi
-
 if [ $? -eq 0 ]; then
   export XCODEBUILD_STATUS="succeeded"
 else
   export XCODEBUILD_STATUS="failed"
 fi
-
 export CONCRETE_STATUS=$XCODEBUILD_STATUS
+
+# Export ipa if everyting succeeded
+if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ XCODEBUILD_STATUS == "succeeded" ]]; then
+  xcodebuild \
+    -exportArchive \
+    -exportFormat IPA \
+    -archivePath "$ARCHIVE_PATH" \
+    -exportPath "$EXPORT_PATH" \
+    -exportWithOriginalSigningIdentity
+fi
 
 unset UUID
 rm "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
