@@ -29,7 +29,7 @@ fi
 
 export ARCHIVE_PATH=$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.xcarchive
 if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
-  export XCODEBUILD_ACTION="archive -archivePath \"$ARCHIVE_PATH\""
+  export XCODEBUILD_ACTION="archive -archivePath $ARCHIVE_PATH"
 fi
 
 if [ -n "$CONCRETE_ACTION_EXPORT_ARCHIVE" ]; then
@@ -52,8 +52,8 @@ uuid_key=$(grep -aA1 UUID $PROVISION_PATH)
 export PROFILE_UUID=$([[ $uuid_key =~ ([-A-Z0-9]{36}) ]] && echo ${BASH_REMATCH[1]})
 cp $PROVISION_PATH "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
 
-# Get identities
-$CONCRETE_STEP_DIR/keychain.sh get-identity
+# Get identities from certificate
+export CERTIFICATE_IDENTITY=$(security find-certificate -a $CONCRETE_KEYCHAIN_PATH | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
 
 # Start the build
 if [ -n "$CONCRETE_ACTION_BUILD" ] || [ -n "$CONCRETE_ACTION_ANALYZE" ] || [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then

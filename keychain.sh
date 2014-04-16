@@ -17,6 +17,4 @@ elif [[ $1 = "remove" ]]; then
 
   unset SAVED_KEYCHAINS
   unset CERTIFICATE_IDENTITY
-elif [[ $1 == "get-identity" ]]; then
-  export CERTIFICATE_IDENTITY=$(security find-certificate -a $CONCRETE_KEYCHAIN_PATH | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
 fi
