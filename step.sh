@@ -76,7 +76,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ $XCODEBUILD_STATUS == "succeeded" ]];
     -exportFormat ipa \
     -archivePath "$ARCHIVE_PATH" \
     -exportPath "$EXPORT_PATH" \
-    -exportWithOriginalSigningIdentity
+    -exportProvisioningProfile "$PROFILE_UUID"
 else
   unset UUID
   rm "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
