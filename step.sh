@@ -50,7 +50,7 @@ export PROFILE_UUID=$([[ $uuid_key =~ ([-A-Z0-9]{36}) ]] && echo ${BASH_REMATCH[
 cp $PROVISION_PATH "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
 
 # Get identities from certificate
-export CERTIFICATE_IDENTITY=$(security find-certificate -a $CONCRETE_KEYCHAIN_PATH | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
+export CERTIFICATE_IDENTITY=$(security find-certificate -a $CONCRETE_KEYCHAIN | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
 
 # Start the build
 if [ -n "$CONCRETE_ACTION_BUILD" ] || [ -n "$CONCRETE_ACTION_ANALYZE" ] || [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
@@ -60,7 +60,7 @@ if [ -n "$CONCRETE_ACTION_BUILD" ] || [ -n "$CONCRETE_ACTION_ANALYZE" ] || [ -n 
     $XCODEBUILD_ACTION \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
-    OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN_PATH"
+    OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
 fi
 
 if [ $? -eq 0 ]; then
