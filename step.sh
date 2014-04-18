@@ -4,9 +4,9 @@ echo "$ cd $CONCRETE_SOURCE_DIR"
 cd $CONCRETE_SOURCE_DIR
 
 if [[ $CONCRETE_PROJECT_PATH == *".xcodeproj" ]]; then
-  export CONCRETE_PROJECT_ACTION="-project $CONCRETE_PROJECT_PATH"
+  export XCODE_PROJECT_ACTION="-project $CONCRETE_PROJECT_PATH"
 elif [[ $CONCRETE_PROJECT_PATH == *".xcworkspace" ]]; then
-  export CONCRETE_PROJECT_ACTION="-workspace $CONCRETE_PROJECT_PATH"
+  export XCODE_PROJECT_ACTION="-workspace $CONCRETE_PROJECT_PATH"
 else
   echo "Failed to get valid project file: $CONCRETE_PROJECT_PATH"
   exit 1
@@ -20,29 +20,25 @@ if [ -n "$CONCRETE_ACTION_BUILD" ]; then
 fi
 
 if [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
-  export XCODEBUILD_ACTION="analyze"
+  export XCODEBUILD_ACTION="clean analyze"
 fi
 
 # if [ -n "$CONCRETE_ACTION_TEST" ]; then
 #   export XCODEBUILD_ACTION="clean test"
 # fi
 
-export ARCHIVE_PATH=$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.xcarchive
 if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
-  export XCODEBUILD_ACTION="archive -archivePath \"$ARCHIVE_PATH\""
-fi
-
-if [ -n "$CONCRETE_ACTION_EXPORT_ARCHIVE" ]; then
-  export EXPORT_PATH=$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.ipa
-  export XCODEBUILD_ACTION="-exportArchive -exportFormat IPA -archivePath \"$ARCHIVE_PATH\" -exportPath \"$EXPORT_PATH\" -exportWithOriginalSigningIdentity"
+  export ARCHIVE_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.xcarchive"
+  export XCODEBUILD_ACTION="clean archive -archivePath $ARCHIVE_PATH"
+  export EXPORT_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME"
 fi
 
 # Get provisioning profile
-export PROVISION_PATH=$CONCRETE_PROFILE_DIR/profile.mobileprovision
+export PROVISION_PATH="$CONCRETE_PROFILE_DIR/profile.mobileprovision"
 curl -so $PROVISION_PATH $CONCRETE_PROVISION_URL
 
 # Get certificate
-export CERTIFICATE_PATH=$CONCRETE_PROFILE_DIR/Certificate.p12
+export CERTIFICATE_PATH="$CONCRETE_PROFILE_DIR/Certificate.p12"
 curl -so $CERTIFICATE_PATH $CONCRETE_CERTIFICATE_URL
 
 $CONCRETE_STEP_DIR/keychain.sh add
@@ -52,25 +48,18 @@ uuid_key=$(grep -aA1 UUID $PROVISION_PATH)
 export PROFILE_UUID=$([[ $uuid_key =~ ([-A-Z0-9]{36}) ]] && echo ${BASH_REMATCH[1]})
 cp $PROVISION_PATH "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
 
-# Get identities
-$CONCRETE_STEP_DIR/keychain.sh get-identity
-
-export XCODE_PROJECT_SETTINGS="$CONCRETE_PROJECT_ACTION -scheme \"$CONCRETE_SCHEME\""
-export XCODE_SIGNING="CODE_SIGN_IDENTITY=\"$CERTIFICATE_IDENTITY\" PROVISIONING_PROFILE=\"$PROFILE_UUID\" OTHER_CODE_SIGN_FLAGS=\"--keychain $CONCRETE_KEYCHAIN_PATH\""
-export XCODE_BUILD_OUTPUT="OBJROOT=\"$CONCRETE_OBJ_ROOT\" SYMROOT=\"$CONCRETE_SYM_ROOT\""
+# Get identities from certificate
+export CERTIFICATE_IDENTITY=$(security find-certificate -a $CONCRETE_KEYCHAIN_PATH | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
 
 # Start the build
 if [ -n "$CONCRETE_ACTION_BUILD" ] || [ -n "$CONCRETE_ACTION_ANALYZE" ] || [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
   xcodebuild \
-    $XCODE_PROJECT_SETTINGS \
+    $XCODE_PROJECT_ACTION \
+    -scheme $CONCRETE_SCHEME \
     $XCODEBUILD_ACTION \
-    $XCODE_BUILD_OUTPUT \
-    $XCODE_SIGNING
-fi
-
-if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
-  xcodebuild \
-    $XCODEBUILD_ACTION
+    CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
+    PROVISIONING_PROFILE="$PROFILE_UUID" \
+    OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN_PATH"
 fi
 
 if [ $? -eq 0 ]; then
@@ -78,13 +67,22 @@ if [ $? -eq 0 ]; then
 else
   export XCODEBUILD_STATUS="failed"
 fi
-
 export CONCRETE_STATUS=$XCODEBUILD_STATUS
 
-unset UUID
-rm "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
-$CONCRETE_STEP_DIR/keychain.sh remove
+# Export ipa if everyting succeeded
+if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ $XCODEBUILD_STATUS == "succeeded" ]]; then
+  xcodebuild \
+    -exportArchive \
+    -exportFormat ipa \
+    -archivePath "$ARCHIVE_PATH" \
+    -exportPath "$EXPORT_PATH" \
+    -exportWithOriginalSigningIdentity
+else
+  unset UUID
+  rm "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
+  $CONCRETE_STEP_DIR/keychain.sh remove
 
-# Remove downloaded files
-rm $PROVISION_PATH
-rm $CERTIFICATE_PATH
+  # Remove downloaded files
+  rm $PROVISION_PATH
+  rm $CERTIFICATE_PATH
+fi
