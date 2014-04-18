@@ -84,7 +84,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ $XCODEBUILD_STATUS == "succeeded" ]];
 
   # Generate dSym zip
   export DSYM_PATH=${ARCHIVE_PATH}/dSYMs/${CONCRETE_SCHEME}.app.dSYM
-  if [ -f $DSYM_PATH ]; then
+  if [ -d $DSYM_PATH ]; then
     echo "Generating zip for dSym"
 
     /usr/bin/zip -rTy \
