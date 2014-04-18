@@ -31,6 +31,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
   export ARCHIVE_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.xcarchive"
   export XCODEBUILD_ACTION="clean archive -archivePath $ARCHIVE_PATH"
   export EXPORT_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME"
+  export DSYM_ZIP_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.dSYM.zip"
 fi
 
 # Get provisioning profile
@@ -71,18 +72,33 @@ export CONCRETE_STATUS=$XCODEBUILD_STATUS
 
 # Export ipa if everyting succeeded
 if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ $XCODEBUILD_STATUS == "succeeded" ]]; then
+  # Export ipa
+  echo "Generating signed IPA"
+  
   xcodebuild \
     -exportArchive \
     -exportFormat ipa \
     -archivePath "$ARCHIVE_PATH" \
     -exportPath "$EXPORT_PATH" \
     -exportWithOriginalSigningIdentity
-else
-  unset UUID
-  rm "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
-  $CONCRETE_STEP_DIR/keychain.sh remove
 
-  # Remove downloaded files
-  rm $PROVISION_PATH
-  rm $CERTIFICATE_PATH
+  # Generate dSym zip
+  export DSYM_PATH=${ARCHIVE_PATH}/dSYMs/${CONCRETE_SCHEME}.app.dSYM
+  if [ -f $DSYM_PATH ]; then
+    echo "Generating zip for dSym"
+
+    /usr/bin/zip -rTy \
+      $DSYM_ZIP_PATH \
+      $DSYM_PATH
+  else
+    echo "No dSYM file found in ${ARCHIVE_PATH}"
+  fi
 fi
+
+unset UUID
+rm "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
+$CONCRETE_STEP_DIR/keychain.sh remove
+
+# Remove downloaded files
+rm $PROVISION_PATH
+rm $CERTIFICATE_PATH

@@ -1,5 +1,3 @@
-export CONCRETE_KEYCHAIN="login.keychain"
-
 if [[ $1 == "add" ]]; then
   export KEYCHAIN_PASSPHRASE="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
 
