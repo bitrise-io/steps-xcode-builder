@@ -1,5 +1,6 @@
 if [[ $1 == "add" ]]; then
-  export KEYCHAIN_PASSPHRASE="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
+  # LC_ALL: required for tr, for more info: http://unix.stackexchange.com/questions/45404/why-cant-tr-read-from-dev-urandom-on-osx
+  export KEYCHAIN_PASSPHRASE="$(cat /dev/urandom | LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
 
   # Create the keychain
   security -v create-keychain -p $KEYCHAIN_PASSPHRASE $CONCRETE_KEYCHAIN
