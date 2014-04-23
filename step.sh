@@ -82,6 +82,11 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ $XCODEBUILD_STATUS == "succeeded" ]];
     -exportPath "$EXPORT_PATH" \
     -exportWithOriginalSigningIdentity
 
+  if [[ $? != 0 ]]; then
+    exit $?
+  fi
+  echo "export CONCRETE_IPA_PATH='$EXPORT_PATH.ipa'" >> ~/.bash_profile
+
   # Generate dSym zip
   export DSYM_PATH=${ARCHIVE_PATH}/dSYMs/${CONCRETE_SCHEME}.app.dSYM
   if [ -d $DSYM_PATH ]; then
@@ -90,6 +95,11 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ $XCODEBUILD_STATUS == "succeeded" ]];
     /usr/bin/zip -rTy \
       $DSYM_ZIP_PATH \
       $DSYM_PATH
+
+    if [[ $? != 0 ]]; then
+      exit $?
+    fi
+    echo "export CONCRETE_DSYM_PATH='$DSYM_ZIP_PATH'" >> ~/.bash_profile
   else
     echo "No dSYM file found in ${ARCHIVE_PATH}"
   fi
