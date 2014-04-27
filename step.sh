@@ -4,9 +4,9 @@ echo "$ cd $CONCRETE_SOURCE_DIR"
 cd $CONCRETE_SOURCE_DIR
 
 if [[ $CONCRETE_PROJECT_PATH == *".xcodeproj" ]]; then
-  export XCODE_PROJECT_ACTION="-project $CONCRETE_PROJECT_PATH"
+  export XCODE_PROJECT_ACTION="-project \"$CONCRETE_PROJECT_PATH\""
 elif [[ $CONCRETE_PROJECT_PATH == *".xcworkspace" ]]; then
-  export XCODE_PROJECT_ACTION="-workspace $CONCRETE_PROJECT_PATH"
+  export XCODE_PROJECT_ACTION="-workspace \"$CONCRETE_PROJECT_PATH\""
 else
   echo "Failed to get valid project file: $CONCRETE_PROJECT_PATH"
   exit 1
@@ -29,7 +29,7 @@ fi
 
 if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
   export ARCHIVE_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.xcarchive"
-  export XCODEBUILD_ACTION="clean archive -archivePath $ARCHIVE_PATH"
+  export XCODEBUILD_ACTION='clean archive -archivePath "$ARCHIVE_PATH"'
   export EXPORT_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME"
   export DSYM_ZIP_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.dSYM.zip"
 fi
@@ -56,7 +56,7 @@ export CERTIFICATE_IDENTITY=$(security find-certificate -a $CONCRETE_KEYCHAIN | 
 if [ -n "$CONCRETE_ACTION_BUILD" ] || [ -n "$CONCRETE_ACTION_ANALYZE" ] || [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
   xcodebuild \
     $XCODE_PROJECT_ACTION \
-    -scheme $CONCRETE_SCHEME \
+    -scheme "$CONCRETE_SCHEME" \
     $XCODEBUILD_ACTION \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
@@ -88,12 +88,12 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ $XCODEBUILD_STATUS == "succeeded" ]];
   echo "export CONCRETE_IPA_PATH='$EXPORT_PATH.ipa'" >> ~/.bash_profile
 
   # Generate dSym zip
-  export DSYM_PATH=${ARCHIVE_PATH}/dSYMs/${CONCRETE_SCHEME}.app.dSYM
+  export DSYM_PATH="${ARCHIVE_PATH}/dSYMs/${CONCRETE_SCHEME}.app.dSYM"
   if [ -d $DSYM_PATH ]; then
     echo "Generating zip for dSym"
 
     /usr/bin/zip -rTy \
-      $DSYM_ZIP_PATH \
+      "$DSYM_ZIP_PATH" \
       $DSYM_PATH
 
     if [[ $? != 0 ]]; then
