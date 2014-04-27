@@ -3,7 +3,7 @@ if [[ $1 == "add" ]]; then
   export KEYCHAIN_PASSPHRASE="$(cat /dev/urandom | LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
 
   # Create the keychain
-  security -v create-keychain -p "$KEYCHAIN_PASSPHRASE $CONCRETE_KEYCHAIN"
+  security -v create-keychain -p "$KEYCHAIN_PASSPHRASE" "$CONCRETE_KEYCHAIN"
   security -v default-keychain -d user -s "$CONCRETE_KEYCHAIN"
 
   # Import to keychain
