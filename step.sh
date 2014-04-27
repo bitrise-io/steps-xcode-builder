@@ -12,6 +12,8 @@ else
   exit 1
 fi
 
+echo "XCODE_PROJECT_ACTION: $XCODE_PROJECT_ACTION"
+
 # Create directory structure
 $CONCRETE_STEP_DIR/create_directory_structure.sh
 
