@@ -115,5 +115,5 @@ rm "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
 $CONCRETE_STEP_DIR/keychain.sh remove
 
 # Remove downloaded files
-rm $PROVISION_PATH
-rm $CERTIFICATE_PATH
+# rm $PROVISION_PATH
+# rm $CERTIFICATE_PATH
