@@ -32,7 +32,7 @@ export CERTIFICATE_PATH="$CONCRETE_PROFILE_DIR/Certificate.p12"
 curl -so "$CERTIFICATE_PATH" "$CONCRETE_CERTIFICATE_URL"
 echo "CERTIFICATE_PATH: $CERTIFICATE_PATH"
 
-echo "keychain.sh add"
+echo "$ keychain.sh add"
 $CONCRETE_STEP_DIR/keychain.sh add
 
 # Get UUID & install provision profile
