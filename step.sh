@@ -25,25 +25,21 @@ fi
 
 # Get provisioning profile
 export PROVISION_PATH="$CONCRETE_PROFILE_DIR/profile.mobileprovision"
-curl -so "$PROVISION_PATH" "$CONCRETE_PROVISION_URL"
+curl -so $PROVISION_PATH $CONCRETE_PROVISION_URL
 
 # Get certificate
 export CERTIFICATE_PATH="$CONCRETE_PROFILE_DIR/Certificate.p12"
-curl -so "$CERTIFICATE_PATH" "$CONCRETE_CERTIFICATE_URL"
-echo "CERTIFICATE_PATH: $CERTIFICATE_PATH"
+curl -so $CERTIFICATE_PATH $CONCRETE_CERTIFICATE_URL
 
-echo "keychain.sh add"
 $CONCRETE_STEP_DIR/keychain.sh add
 
 # Get UUID & install provision profile
-uuid_key=$(grep -aA1 UUID "$PROVISION_PATH")
+uuid_key=$(grep -aA1 UUID $PROVISION_PATH)
 export PROFILE_UUID=$([[ $uuid_key =~ ([-A-Z0-9]{36}) ]] && echo ${BASH_REMATCH[1]})
-cp "$PROVISION_PATH" "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
-echo "PROFILE_UUID: $PROFILE_UUID"
+cp $PROVISION_PATH "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
 
 # Get identities from certificate
 export CERTIFICATE_IDENTITY=$(security find-certificate -a $CONCRETE_KEYCHAIN | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
-echo "CERTIFICATE_IDENTITY: $CERTIFICATE_IDENTITY"
 
 # Start the build
 if [ -n "$CONCRETE_ACTION_BUILD" ]; then
@@ -77,7 +73,6 @@ if [ $? -eq 0 ]; then
 else
   export XCODEBUILD_STATUS="failed"
 fi
-echo "XCODEBUILD_STATUS: $XCODEBUILD_STATUS"
 export CONCRETE_STATUS=$XCODEBUILD_STATUS
 
 # Export ipa if everyting succeeded
