@@ -30,13 +30,16 @@ curl -so "$PROVISION_PATH" "$CONCRETE_PROVISION_URL"
 # Get certificate
 export CERTIFICATE_PATH="$CONCRETE_PROFILE_DIR/Certificate.p12"
 curl -so "$CERTIFICATE_PATH" "$CONCRETE_CERTIFICATE_URL"
+echo "CERTIFICATE_PATH: $CERTIFICATE_PATH"
 
+echo "keychain.sh add"
 $CONCRETE_STEP_DIR/keychain.sh add
 
 # Get UUID & install provision profile
 uuid_key=$(grep -aA1 UUID "$PROVISION_PATH")
 export PROFILE_UUID=$([[ $uuid_key =~ ([-A-Z0-9]{36}) ]] && echo ${BASH_REMATCH[1]})
 cp "$PROVISION_PATH" "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
+echo "PROFILE_UUID: $PROFILE_UUID"
 
 # Get identities from certificate
 export CERTIFICATE_IDENTITY=$(security find-certificate -a $CONCRETE_KEYCHAIN | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
