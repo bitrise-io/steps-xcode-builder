@@ -52,7 +52,7 @@ if [ -n "$CONCRETE_ACTION_BUILD" ]; then
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
 elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
   xcodebuild \
-    $XCODE_PROJECT_ACTION \
+    $XCODE_PROJECT_ACTION "$CONCRETE_PROJECT_PATH" \
     -scheme "$CONCRETE_SCHEME" \
     clean analyze \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
@@ -60,7 +60,7 @@ elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
 elif [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
   xcodebuild \
-    $XCODE_PROJECT_ACTION \
+    $XCODE_PROJECT_ACTION "$CONCRETE_PROJECT_PATH" \
     -scheme "$CONCRETE_SCHEME" \
     clean archive -archivePath "$ARCHIVE_PATH" \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
