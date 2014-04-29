@@ -12,6 +12,16 @@ else
   exit 1
 fi
 
+function finalcleanup {
+  unset UUID
+  rm "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
+  $CONCRETE_STEP_DIR/keychain.sh remove
+
+  # Remove downloaded files
+  rm $PROVISION_PATH
+  rm $CERTIFICATE_PATH
+}
+
 echo "XCODE_PROJECT_ACTION: $XCODE_PROJECT_ACTION"
 
 # Create directory structure
@@ -78,10 +88,16 @@ else
   export XCODEBUILD_STATUS="failed"
 fi
 echo "XCODEBUILD_STATUS: $XCODEBUILD_STATUS"
-export CONCRETE_STATUS=$XCODEBUILD_STATUS
+export CONCRETE_BUILD_STATUS=$XCODEBUILD_STATUS
+echo "export CONCRETE_BUILD_STATUS=$XCODEBUILD_STATUS" >> ~/.bash_profile
+
+if [ "$XCODEBUILD_STATUS" != "succeeded" ]; then
+  finalcleanup
+  exit 1
+fi
 
 # Export ipa if everyting succeeded
-if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ $XCODEBUILD_STATUS == "succeeded" ]]; then
+if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ "$XCODEBUILD_STATUS" == "succeeded" ]]; then
   # Export ipa
   echo "Generating signed IPA"
   
@@ -93,6 +109,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ $XCODEBUILD_STATUS == "succeeded" ]];
     -exportWithOriginalSigningIdentity
 
   if [[ $? != 0 ]]; then
+    finalcleanup
     exit $?
   fi
   echo "export CONCRETE_IPA_PATH='$EXPORT_PATH.ipa'" >> ~/.bash_profile
@@ -107,6 +124,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ $XCODEBUILD_STATUS == "succeeded" ]];
       "$DSYM_PATH"
 
     if [[ $? != 0 ]]; then
+      finalcleanup
       exit $?
     fi
     echo "export CONCRETE_DSYM_PATH='$DSYM_ZIP_PATH'" >> ~/.bash_profile
@@ -115,10 +133,4 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ $XCODEBUILD_STATUS == "succeeded" ]];
   fi
 fi
 
-unset UUID
-rm "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
-$CONCRETE_STEP_DIR/keychain.sh remove
-
-# Remove downloaded files
-rm $PROVISION_PATH
-rm $CERTIFICATE_PATH
+finalcleanup
