@@ -13,6 +13,7 @@ else
 fi
 
 function finalcleanup {
+  echo "-> finalcleanup"
   unset UUID
   rm "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
   $CONCRETE_STEP_DIR/keychain.sh remove
@@ -36,11 +37,26 @@ fi
 # Get provisioning profile
 export PROVISION_PATH="$CONCRETE_PROFILE_DIR/profile.mobileprovision"
 curl -so "$PROVISION_PATH" "$CONCRETE_PROVISION_URL"
+echo "PROVISION_PATH: $PROVISION_PATH"
+if [[ ! -f "$PROVISION_PATH" ]]; then
+  echo " [!] PROVISION_PATH: File not found!"
+  finalcleanup
+  exit 1
+else
+  echo " -> PROVISION_PATH: OK"
+fi
 
 # Get certificate
 export CERTIFICATE_PATH="$CONCRETE_PROFILE_DIR/Certificate.p12"
 curl -so "$CERTIFICATE_PATH" "$CONCRETE_CERTIFICATE_URL"
 echo "CERTIFICATE_PATH: $CERTIFICATE_PATH"
+if [[ ! -f "$CERTIFICATE_PATH" ]]; then
+  echo " [!] CERTIFICATE_PATH: File not found!"
+  finalcleanup
+  exit 1
+else
+  echo " -> CERTIFICATE_PATH: OK"
+fi
 
 echo "$ keychain.sh add"
 $CONCRETE_STEP_DIR/keychain.sh add
@@ -49,6 +65,11 @@ $CONCRETE_STEP_DIR/keychain.sh add
 uuid_key=$(grep -aA1 UUID "$PROVISION_PATH")
 export PROFILE_UUID=$([[ $uuid_key =~ ([-A-Z0-9]{36}) ]] && echo ${BASH_REMATCH[1]})
 cp "$PROVISION_PATH" "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
+if [[ ! -f "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision" ]]; then
+  echo " [!] Mobileprovision file: File not found - probably copy failed!"
+  finalcleanup
+  exit 1
+fi
 echo "PROFILE_UUID: $PROFILE_UUID"
 
 # Get identities from certificate
