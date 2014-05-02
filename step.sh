@@ -36,7 +36,7 @@ fi
 
 # Get provisioning profile
 export PROVISION_PATH="$CONCRETE_PROFILE_DIR/profile.mobileprovision"
-curl -so "$PROVISION_PATH" "$CONCRETE_PROVISION_URL"
+curl -fso "$PROVISION_PATH" "$CONCRETE_PROVISION_URL"
 echo "PROVISION_PATH: $PROVISION_PATH"
 if [[ ! -f "$PROVISION_PATH" ]]; then
   echo " [!] PROVISION_PATH: File not found!"
@@ -48,7 +48,7 @@ fi
 
 # Get certificate
 export CERTIFICATE_PATH="$CONCRETE_PROFILE_DIR/Certificate.p12"
-curl -so "$CERTIFICATE_PATH" "$CONCRETE_CERTIFICATE_URL"
+curl -fso "$CERTIFICATE_PATH" "$CONCRETE_CERTIFICATE_URL"
 echo "CERTIFICATE_PATH: $CERTIFICATE_PATH"
 if [[ ! -f "$CERTIFICATE_PATH" ]]; then
   echo " [!] CERTIFICATE_PATH: File not found!"
