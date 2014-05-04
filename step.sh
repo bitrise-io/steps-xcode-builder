@@ -110,7 +110,12 @@ else
 fi
 echo "XCODEBUILD_STATUS: $XCODEBUILD_STATUS"
 export CONCRETE_BUILD_STATUS=$XCODEBUILD_STATUS
-echo "export CONCRETE_BUILD_STATUS=$XCODEBUILD_STATUS" >> ~/.bash_profile
+if [ -n "$CONCRETE_ACTION_BUILD" ]; then
+  echo "export CONCRETE_BUILD_STATUS=$XCODEBUILD_STATUS" >> ~/.bash_profile
+elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
+  export CONCRETE_ANALYZE_STATUS=$XCODEBUILD_STATUS
+  echo "export CONCRETE_ANALYZE_STATUS=$XCODEBUILD_STATUS" >> ~/.bash_profile
+fi
 
 if [ "$XCODEBUILD_STATUS" != "succeeded" ]; then
   finalcleanup
@@ -118,39 +123,49 @@ if [ "$XCODEBUILD_STATUS" != "succeeded" ]; then
 fi
 
 # Export ipa if everyting succeeded
-if [ -n "$CONCRETE_ACTION_ARCHIVE" ] && [[ "$XCODEBUILD_STATUS" == "succeeded" ]]; then
-  # Export ipa
-  echo "Generating signed IPA"
-  
-  xcodebuild \
-    -exportArchive \
-    -exportFormat ipa \
-    -archivePath "$ARCHIVE_PATH" \
-    -exportPath "$EXPORT_PATH" \
-    -exportWithOriginalSigningIdentity
-
-  if [[ $? != 0 ]]; then
-    finalcleanup
-    exit $?
-  fi
-  echo "export CONCRETE_IPA_PATH='$EXPORT_PATH.ipa'" >> ~/.bash_profile
-
-  # Generate dSym zip
-  export DSYM_PATH="${ARCHIVE_PATH}/dSYMs/${CONCRETE_SCHEME}.app.dSYM"
-  if [ -d "$DSYM_PATH" ]; then
-    echo "Generating zip for dSym"
-
-    /usr/bin/zip -rTy \
-      "$DSYM_ZIP_PATH" \
-      "$DSYM_PATH"
+if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
+  if [[ "$XCODEBUILD_STATUS" == "succeeded" ]]; then
+    # Export ipa
+    echo "Generating signed IPA"
+    
+    xcodebuild \
+      -exportArchive \
+      -exportFormat ipa \
+      -archivePath "$ARCHIVE_PATH" \
+      -exportPath "$EXPORT_PATH" \
+      -exportWithOriginalSigningIdentity
 
     if [[ $? != 0 ]]; then
+      export CONCRETE_ARCHIVE_STATUS="failed"
+      echo "export CONCRETE_ARCHIVE_STATUS=failed" >> ~/.bash_profile
       finalcleanup
       exit $?
+    else
+      export CONCRETE_ARCHIVE_STATUS="succeeded"
+      echo "export CONCRETE_ARCHIVE_STATUS=succeeded" >> ~/.bash_profile
     fi
-    echo "export CONCRETE_DSYM_PATH='$DSYM_ZIP_PATH'" >> ~/.bash_profile
+    echo "export CONCRETE_IPA_PATH='$EXPORT_PATH.ipa'" >> ~/.bash_profile
+
+    # Generate dSym zip
+    export DSYM_PATH="${ARCHIVE_PATH}/dSYMs/${CONCRETE_SCHEME}.app.dSYM"
+    if [ -d "$DSYM_PATH" ]; then
+      echo "Generating zip for dSym"
+
+      /usr/bin/zip -rTy \
+        "$DSYM_ZIP_PATH" \
+        "$DSYM_PATH"
+
+      if [[ $? != 0 ]]; then
+        finalcleanup
+        exit $?
+      fi
+      echo "export CONCRETE_DSYM_PATH='$DSYM_ZIP_PATH'" >> ~/.bash_profile
+    else
+      echo "No dSYM file found in ${ARCHIVE_PATH}"
+    fi
   else
-    echo "No dSYM file found in ${ARCHIVE_PATH}"
+    export CONCRETE_ARCHIVE_STATUS="failed"
+    echo "export CONCRETE_ARCHIVE_STATUS=failed" >> ~/.bash_profile
   fi
 fi
 
