@@ -3,6 +3,13 @@
 echo "$ cd $CONCRETE_SOURCE_DIR"
 cd $CONCRETE_SOURCE_DIR
 
+build_tool="$CONCRETE_BUILD_TOOL"
+echo " [i] Specified Build Tool: $build_tool"
+if [ -z "$build_tool" ];
+  build_tool="xcodebuild"
+fi
+echo " [i] Using build tool: $build_tool"
+
 if [[ $CONCRETE_PROJECT_PATH == *".xcodeproj" ]]; then
   export XCODE_PROJECT_ACTION="-project"
 elif [[ $CONCRETE_PROJECT_PATH == *".xcworkspace" ]]; then
