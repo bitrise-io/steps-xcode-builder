@@ -85,7 +85,7 @@ echo "CERTIFICATE_IDENTITY: $CERTIFICATE_IDENTITY"
 
 # Start the build
 if [ -n "$CONCRETE_ACTION_BUILD" ]; then
-  xcodebuild \
+  $build_tool \
     $XCODE_PROJECT_ACTION "$CONCRETE_PROJECT_PATH" \
     -scheme "$CONCRETE_SCHEME" \
     clean build \
@@ -93,7 +93,7 @@ if [ -n "$CONCRETE_ACTION_BUILD" ]; then
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
 elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
-  xcodebuild \
+  $build_tool \
     $XCODE_PROJECT_ACTION "$CONCRETE_PROJECT_PATH" \
     -scheme "$CONCRETE_SCHEME" \
     clean analyze \
@@ -101,7 +101,7 @@ elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
 elif [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
-  xcodebuild \
+  $build_tool \
     $XCODE_PROJECT_ACTION "$CONCRETE_PROJECT_PATH" \
     -scheme "$CONCRETE_SCHEME" \
     clean archive -archivePath "$ARCHIVE_PATH" \
@@ -135,7 +135,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
     # Export ipa
     echo "Generating signed IPA"
     
-    xcodebuild \
+    $build_tool \
       -exportArchive \
       -exportFormat ipa \
       -archivePath "$ARCHIVE_PATH" \
