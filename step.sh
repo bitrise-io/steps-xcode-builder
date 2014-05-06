@@ -135,7 +135,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
     # Export ipa
     echo "Generating signed IPA"
     
-    $build_tool \
+    xcodebuild \
       -exportArchive \
       -exportFormat ipa \
       -archivePath "$ARCHIVE_PATH" \
