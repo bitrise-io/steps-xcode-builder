@@ -5,7 +5,7 @@ cd $CONCRETE_SOURCE_DIR
 
 build_tool="$CONCRETE_BUILD_TOOL"
 echo " [i] Specified Build Tool: $build_tool"
-if [ -z "$build_tool" ];
+if [ -z "$build_tool" ]; then
   build_tool="xcodebuild"
 fi
 echo " [i] Using build tool: $build_tool"
