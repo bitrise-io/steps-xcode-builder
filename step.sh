@@ -12,6 +12,19 @@ else
   exit 1
 fi
 
+build_tool="$CONCRETE_BUILD_TOOL"
+echo " [i] Specified Build Tool: $build_tool"
+if [ -z "$build_tool" ]; then
+  build_tool="xcodebuild"
+fi
+if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
+  if [[ "$build_tool" != "xcodebuild" ]]; then
+    build_tool="xcodebuild"
+    echo " [!] Build Tool set to xcodebuild - for Archive action only xcodebuild is supported!"
+  fi
+fi
+echo " [i] Using build tool: $build_tool"
+
 function finalcleanup {
   echo "-> finalcleanup"
   unset UUID
@@ -78,7 +91,7 @@ echo "CERTIFICATE_IDENTITY: $CERTIFICATE_IDENTITY"
 
 # Start the build
 if [ -n "$CONCRETE_ACTION_BUILD" ]; then
-  xcodebuild \
+  $build_tool \
     $XCODE_PROJECT_ACTION "$CONCRETE_PROJECT_PATH" \
     -scheme "$CONCRETE_SCHEME" \
     clean build \
@@ -86,7 +99,7 @@ if [ -n "$CONCRETE_ACTION_BUILD" ]; then
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
 elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
-  xcodebuild \
+  $build_tool \
     $XCODE_PROJECT_ACTION "$CONCRETE_PROJECT_PATH" \
     -scheme "$CONCRETE_SCHEME" \
     clean analyze \
@@ -94,7 +107,7 @@ elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
 elif [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
-  xcodebuild \
+  $build_tool \
     $XCODE_PROJECT_ACTION "$CONCRETE_PROJECT_PATH" \
     -scheme "$CONCRETE_SCHEME" \
     clean archive -archivePath "$ARCHIVE_PATH" \

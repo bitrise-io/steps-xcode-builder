@@ -2,7 +2,12 @@ steps-xcode-builder
 ===================
 
 # Input Environment Variables
-- CONCRETE_SOURCE_DIR
+- CONCRETE_PROJECT_PATH
+- CONCRETE_SCHEME
+- CONCRETE_ACTION_BUILD or CONCRETE_ACTION_ANALYZE or CONCRETE_ACTION_ARCHIVE
+- CONCRETE_CERTIFICATE_PASSPHRASE
+- CONCRETE_CERTIFICATE_URL
+- CONCRETE_PROVISION_URL
 
 # Output Environment Variables (accessible for Steps running after this Step)
 if CONCRETE_ACTION_BUILD
