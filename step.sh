@@ -36,7 +36,7 @@ function finalcleanup {
   rm $PROVISION_PATH
   rm $CERTIFICATE_PATH
 
-  if [[ $is_build_action_success -e 1 ]] ; then
+  if [ $is_build_action_success -eq 1 ] ; then
     # success
     if [ -n "$CONCRETE_ACTION_BUILD" ]; then
       echo "export CONCRETE_BUILD_STATUS=succeeded" >> ~/.bash_profile
