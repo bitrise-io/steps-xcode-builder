@@ -171,7 +171,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
     if [[ $? != 0 ]]; then
       ecode=$?
       finalcleanup
-      exit ecode
+      exit $ecode
     fi
     echo "export CONCRETE_IPA_PATH='$EXPORT_PATH.ipa'" >> ~/.bash_profile
 
@@ -187,7 +187,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
       if [[ $? != 0 ]]; then
         ecode=$?
         finalcleanup
-        exit ecode
+        exit $ecode
       fi
       echo "export CONCRETE_DSYM_PATH='$DSYM_ZIP_PATH'" >> ~/.bash_profile
       is_build_action_success=1
