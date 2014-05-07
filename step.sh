@@ -144,9 +144,9 @@ else
 fi
 echo "XCODEBUILD_STATUS: $XCODEBUILD_STATUS"
 
-if [ -n "$CONCRETE_ACTION_BUILD" ]; then
+if [[ -n "$CONCRETE_ACTION_BUILD" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
   is_build_action_success=1
-elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
+elif [[ -n "$CONCRETE_ACTION_ANALYZE" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
   is_build_action_success=1
 fi
 
