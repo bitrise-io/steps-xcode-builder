@@ -25,6 +25,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
 fi
 echo " [i] Using build tool: $build_tool"
 
+is_build_action_success=0
 function finalcleanup {
   echo "-> finalcleanup"
   unset UUID
@@ -34,6 +35,26 @@ function finalcleanup {
   # Remove downloaded files
   rm $PROVISION_PATH
   rm $CERTIFICATE_PATH
+
+  if [ $is_build_action_success -eq 1 ] ; then
+    # success
+    if [ -n "$CONCRETE_ACTION_BUILD" ]; then
+      echo "export CONCRETE_BUILD_STATUS=succeeded" >> ~/.bash_profile
+    elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
+      echo "export CONCRETE_ANALYZE_STATUS=succeeded" >> ~/.bash_profile
+    elif [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
+      echo "export CONCRETE_ARCHIVE_STATUS=succeeded" >> ~/.bash_profile
+    fi
+  else
+    # failed
+    if [ -n "$CONCRETE_ACTION_BUILD" ]; then
+      echo "export CONCRETE_BUILD_STATUS=failed" >> ~/.bash_profile
+    elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
+      echo "export CONCRETE_ANALYZE_STATUS=failed" >> ~/.bash_profile
+    elif [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
+      echo "export CONCRETE_ARCHIVE_STATUS=failed" >> ~/.bash_profile
+    fi
+  fi
 }
 
 echo "XCODE_PROJECT_ACTION: $XCODE_PROJECT_ACTION"
@@ -122,12 +143,11 @@ else
   export XCODEBUILD_STATUS="failed"
 fi
 echo "XCODEBUILD_STATUS: $XCODEBUILD_STATUS"
-export CONCRETE_BUILD_STATUS=$XCODEBUILD_STATUS
-if [ -n "$CONCRETE_ACTION_BUILD" ]; then
-  echo "export CONCRETE_BUILD_STATUS=$XCODEBUILD_STATUS" >> ~/.bash_profile
-elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
-  export CONCRETE_ANALYZE_STATUS=$XCODEBUILD_STATUS
-  echo "export CONCRETE_ANALYZE_STATUS=$XCODEBUILD_STATUS" >> ~/.bash_profile
+
+if [[ -n "$CONCRETE_ACTION_BUILD" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
+  is_build_action_success=1
+elif [[ -n "$CONCRETE_ACTION_ANALYZE" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
+  is_build_action_success=1
 fi
 
 if [ "$XCODEBUILD_STATUS" != "succeeded" ]; then
@@ -149,13 +169,9 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
       -exportWithOriginalSigningIdentity
 
     if [[ $? != 0 ]]; then
-      export CONCRETE_ARCHIVE_STATUS="failed"
-      echo "export CONCRETE_ARCHIVE_STATUS=failed" >> ~/.bash_profile
+      ecode=$?
       finalcleanup
-      exit $?
-    else
-      export CONCRETE_ARCHIVE_STATUS="succeeded"
-      echo "export CONCRETE_ARCHIVE_STATUS=succeeded" >> ~/.bash_profile
+      exit $ecode
     fi
     echo "export CONCRETE_IPA_PATH='$EXPORT_PATH.ipa'" >> ~/.bash_profile
 
@@ -169,16 +185,15 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
         "$DSYM_PATH"
 
       if [[ $? != 0 ]]; then
+        ecode=$?
         finalcleanup
-        exit $?
+        exit $ecode
       fi
       echo "export CONCRETE_DSYM_PATH='$DSYM_ZIP_PATH'" >> ~/.bash_profile
+      is_build_action_success=1
     else
       echo "No dSYM file found in ${ARCHIVE_PATH}"
     fi
-  else
-    export CONCRETE_ARCHIVE_STATUS="failed"
-    echo "export CONCRETE_ARCHIVE_STATUS=failed" >> ~/.bash_profile
   fi
 fi
 
