@@ -8,6 +8,7 @@ steps-xcode-builder
 - CONCRETE_CERTIFICATE_PASSPHRASE
 - CONCRETE_CERTIFICATE_URL
 - CONCRETE_PROVISION_URL
+- CONCRETE_BUILD_TOOL: "xcodebuild" is the default; "xctool" is supported; CONCRETE_ARCHIVE_STATUS can only use "xcodebuild"
 
 # Output Environment Variables
 (accessible for Steps running after this Step)
