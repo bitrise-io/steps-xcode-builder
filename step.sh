@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "$ cd $CONCRETE_SOURCE_DIR"
-cd $CONCRETE_SOURCE_DIR
+cd "$CONCRETE_SOURCE_DIR"
 
 if [[ $CONCRETE_PROJECT_PATH == *".xcodeproj" ]]; then
   export XCODE_PROJECT_ACTION="-project"
@@ -11,6 +11,11 @@ else
   echo "Failed to get valid project file: $CONCRETE_PROJECT_PATH"
   exit 1
 fi
+
+projectdir="$(dirname "$CONCRETE_PROJECT_PATH")"
+projectfile="$(basename "$CONCRETE_PROJECT_PATH")"
+echo "$ cd $projectdir"
+cd "$projectdir"
 
 build_tool="$CONCRETE_BUILD_TOOL"
 echo " [i] Specified Build Tool: $build_tool"
@@ -113,7 +118,7 @@ echo "CERTIFICATE_IDENTITY: $CERTIFICATE_IDENTITY"
 # Start the build
 if [ -n "$CONCRETE_ACTION_BUILD" ]; then
   $build_tool \
-    $XCODE_PROJECT_ACTION "$CONCRETE_PROJECT_PATH" \
+    $XCODE_PROJECT_ACTION "$projectfile" \
     -scheme "$CONCRETE_SCHEME" \
     clean build \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
@@ -121,7 +126,7 @@ if [ -n "$CONCRETE_ACTION_BUILD" ]; then
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
 elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
   $build_tool \
-    $XCODE_PROJECT_ACTION "$CONCRETE_PROJECT_PATH" \
+    $XCODE_PROJECT_ACTION "$projectfile" \
     -scheme "$CONCRETE_SCHEME" \
     clean analyze \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
@@ -129,7 +134,7 @@ elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
 elif [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
   $build_tool \
-    $XCODE_PROJECT_ACTION "$CONCRETE_PROJECT_PATH" \
+    $XCODE_PROJECT_ACTION "$projectfile" \
     -scheme "$CONCRETE_SCHEME" \
     clean archive -archivePath "$ARCHIVE_PATH" \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
