@@ -69,8 +69,11 @@ $CONCRETE_STEP_DIR/create_directory_structure.sh
 
 if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
   export ARCHIVE_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.xcarchive"
+  echo " (i) ARCHIVE_PATH=$ARCHIVE_PATH"
   export EXPORT_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME"
+  echo " (i) EXPORT_PATH=$EXPORT_PATH"
   export DSYM_ZIP_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.dSYM.zip"
+  echo " (i) DSYM_ZIP_PATH=$DSYM_ZIP_PATH"
 fi
 
 # Get provisioning profile
@@ -177,6 +180,8 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
       ecode=$?
       finalcleanup
       exit $ecode
+    else
+      echo " (i) Archive build success"
     fi
     echo "export CONCRETE_IPA_PATH='$EXPORT_PATH.ipa'" >> ~/.bash_profile
 
@@ -197,7 +202,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
       echo "export CONCRETE_DSYM_PATH='$DSYM_ZIP_PATH'" >> ~/.bash_profile
       is_build_action_success=1
     else
-      echo "No dSYM file found in ${ARCHIVE_PATH}"
+      echo "No dSYM file found in ${DSYM_PATH}"
     fi
   fi
 fi
