@@ -203,6 +203,8 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
       is_build_action_success=1
     else
       echo "No dSYM file found in ${DSYM_PATH}"
+      finalcleanup
+      exit 1
     fi
   fi
 fi
