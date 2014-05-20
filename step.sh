@@ -195,6 +195,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
       echo " (i) .app.dSYM found: $a_app_dsym"
       app_dsym_count=$[app_dsym_count + 1]
       app_dsym_path="$a_app_dsym"
+      echo " (i) app_dsym_count: $app_dsym_count"
     done
 
     echo " (i) Found dSYM count: $app_dsym_count"
