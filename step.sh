@@ -185,8 +185,28 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
     fi
     echo "export CONCRETE_IPA_PATH='$EXPORT_PATH.ipa'" >> ~/.bash_profile
 
+    # get the .app.dSYM folders from the dSYMs archive folder
+    archive_dsyms_folder="${ARCHIVE_PATH}/dSYMs"
+    app_dsym_count=0
+    app_dsym_path=""
+    for a_app_dsym in "$archive_dsyms_folder/*.app.dSYM"
+    do 
+      echo " (i) .app.dSYM found: $a_app_dsym"
+      app_dsym_count=$[app_dsym_count + 1]
+      app_dsym_path="$a_app_dsym"
+    done
+
+    echo " (i) Found dSYM count: $app_dsym_count"
+    if [ $app_dsym_count -eq 1 ]; then
+      echo " (i) dSYM found - OK"
+    else
+      echo " [!] More than one or no dSYM found!"
+      finalcleanup
+      exit 1
+    fi
+
     # Generate dSym zip
-    export DSYM_PATH="${ARCHIVE_PATH}/dSYMs/${CONCRETE_SCHEME}.app.dSYM"
+    export DSYM_PATH="$app_dsym_path"
     if [ -d "$DSYM_PATH" ]; then
       echo "Generating zip for dSym"
 
@@ -202,7 +222,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
       echo "export CONCRETE_DSYM_PATH='$DSYM_ZIP_PATH'" >> ~/.bash_profile
       is_build_action_success=1
     else
-      echo "No dSYM file found in ${DSYM_PATH}"
+      echo " [!] Error: No dSYM file found in ${DSYM_PATH}"
       finalcleanup
       exit 1
     fi
