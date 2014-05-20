@@ -191,11 +191,12 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
     ls "$archive_dsyms_folder"
     app_dsym_count=0
     app_dsym_path=""
-    for a_app_dsym in "$archive_dsyms_folder/*.app.dSYM"
-    do 
-      echo " (i) .app.dSYM found: $a_app_dsym"
-      app_dsym_count=$[app_dsym_count + 1]
-      app_dsym_path="$a_app_dsym"
+    for a_app_dsym in "$archive_dsyms_folder/*.app.dSYM"; do
+      if [ -d "$a_app_dsym" ]; then
+        echo " (i) .app.dSYM found: $a_app_dsym"
+        app_dsym_count=$[app_dsym_count + 1]
+        app_dsym_path="$a_app_dsym"
+      fi
     done
 
     echo " (i) Found dSYM count: $app_dsym_count"
