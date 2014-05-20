@@ -187,6 +187,8 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
 
     # get the .app.dSYM folders from the dSYMs archive folder
     archive_dsyms_folder="${ARCHIVE_PATH}/dSYMs"
+    echo "$ ls $archive_dsyms_folder"
+    ls "$archive_dsyms_folder"
     app_dsym_count=0
     app_dsym_path=""
     for a_app_dsym in "$archive_dsyms_folder/*.app.dSYM"
@@ -198,7 +200,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
 
     echo " (i) Found dSYM count: $app_dsym_count"
     if [ $app_dsym_count -eq 1 ]; then
-      echo " (i) dSYM found - OK"
+      echo " (i) dSYM found - OK -> $app_dsym_path"
     else
       echo " [!] More than one or no dSYM found!"
       finalcleanup
