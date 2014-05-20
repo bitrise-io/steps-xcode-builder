@@ -191,14 +191,10 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
     ls "$archive_dsyms_folder"
     app_dsym_count=0
     app_dsym_path=""
-    for a_app_dsym in "$archive_dsyms_folder/*.app.dSYM"; do
-      # get the file path as a string (by default it's a "query" and enclosing in "" will fail)
-      a_app_dsym=$(printf "%s" $a_app_dsym)
-      if [ -d "$a_app_dsym" ]; then
-        echo " (i) .app.dSYM found: $a_app_dsym"
-        app_dsym_count=$[app_dsym_count + 1]
-        app_dsym_path="$a_app_dsym"
-      fi
+    find "$archive_dsyms_folder" -type d -name "*.app.dSYM" | while read a_app_dsym; do 
+      echo " (i) .app.dSYM found: $a_app_dsym"
+      app_dsym_count=$[app_dsym_count + 1]
+      app_dsym_path="$a_app_dsym"
     done
 
     echo " (i) Found dSYM count: $app_dsym_count"
