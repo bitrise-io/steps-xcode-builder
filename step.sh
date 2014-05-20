@@ -191,12 +191,15 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
     ls "$archive_dsyms_folder"
     app_dsym_count=0
     app_dsym_path=""
-    find "$archive_dsyms_folder" -type d -name "*.app.dSYM" | while read a_app_dsym; do 
+
+    IFS=$'\n'
+    for a_app_dsym in $(find "$archive_dsyms_folder" -type d -name "*.app.dSYM"); do 
       echo " (i) .app.dSYM found: $a_app_dsym"
       app_dsym_count=$[app_dsym_count + 1]
       app_dsym_path="$a_app_dsym"
       echo " (i) app_dsym_count: $app_dsym_count"
     done
+    unset IFS
 
     echo " (i) Found dSYM count: $app_dsym_count"
     if [ $app_dsym_count -eq 1 ]; then
