@@ -12,6 +12,7 @@ if [[ $1 == "add" ]]; then
   # Unlock keychain
   security -v unlock-keychain -p "$KEYCHAIN_PASSPHRASE" "$CONCRETE_KEYCHAIN"
   security -v set-keychain-settings -lut 7200 "$CONCRETE_KEYCHAIN"
+  security -v list-keychains -d user -s "$CONCRETE_KEYCHAIN"
   security -v list-keychains
 elif [[ $1 = "remove" ]]; then
   security -v delete-keychain "$CONCRETE_KEYCHAIN"
