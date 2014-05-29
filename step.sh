@@ -77,9 +77,16 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
 fi
 
 # Get provisioning profile
+echo "---> Downloading Provision Profile..."
 export PROVISION_PATH="$CONCRETE_PROFILE_DIR/profile.mobileprovision"
 curl -fso "$PROVISION_PATH" "$CONCRETE_PROVISION_URL"
 prov_profile_curl_result=$?
+if [ $prov_profile_curl_result -ne 0 ]; then
+  echo " (i) First download attempt failed - retry..."
+  sleep 5
+  curl -fso "$PROVISION_PATH" "$CONCRETE_PROVISION_URL"
+  prov_profile_curl_result=$?
+fi
 echo "PROVISION_PATH: $PROVISION_PATH"
 echo " (i) curl download result: $prov_profile_curl_result"
 if [[ ! -f "$PROVISION_PATH" ]]; then
@@ -91,9 +98,16 @@ else
 fi
 
 # Get certificate
+echo "---> Downloading Certificate..."
 export CERTIFICATE_PATH="$CONCRETE_PROFILE_DIR/Certificate.p12"
 curl -fso "$CERTIFICATE_PATH" "$CONCRETE_CERTIFICATE_URL"
 cert_curl_result=$?
+if [ $cert_curl_result -ne 0 ]; then
+  echo " (i) First download attempt failed - retry..."
+  sleep 5
+  curl -fso "$CERTIFICATE_PATH" "$CONCRETE_CERTIFICATE_URL"
+  cert_curl_result=$?
+fi
 echo "CERTIFICATE_PATH: $CERTIFICATE_PATH"
 echo " (i) curl download result: $cert_curl_result"
 if [[ ! -f "$CERTIFICATE_PATH" ]]; then
