@@ -4,12 +4,12 @@ if [[ $1 == "add" ]]; then
 
   # Create the keychain
   security -v create-keychain -p "$KEYCHAIN_PASSPHRASE" "$CONCRETE_KEYCHAIN"
-  security -v default-keychain -d user -s "$CONCRETE_KEYCHAIN"
 
   # Import to keychain
-  security -v import "$CERTIFICATE_PATH" -k "$CONCRETE_KEYCHAIN" -P "$CONCRETE_CERTIFICATE_PASSPHRASE" -T /usr/bin/codesign
+  security -v import "$CERTIFICATE_PATH" -k "$CONCRETE_KEYCHAIN" -P "$CONCRETE_CERTIFICATE_PASSPHRASE" -T /usr/bin/codesign -A
 
   # Unlock keychain
+  security -v default-keychain -d user -s "$CONCRETE_KEYCHAIN"
   security -v unlock-keychain -p "$KEYCHAIN_PASSPHRASE" "$CONCRETE_KEYCHAIN"
   security -v set-keychain-settings -lut 7200 "$CONCRETE_KEYCHAIN"
   security -v list-keychains -d user -s "$CONCRETE_KEYCHAIN"
