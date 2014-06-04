@@ -49,6 +49,8 @@ function finalcleanup {
       echo "export CONCRETE_ANALYZE_STATUS=succeeded" >> ~/.bash_profile
     elif [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
       echo "export CONCRETE_ARCHIVE_STATUS=succeeded" >> ~/.bash_profile
+    elif [ -n "$CONCRETE_ACTION_UNITTEST" ]; then
+      echo "export CONCRETE_UNITTEST_STATUS=succeeded" >> ~/.bash_profile
     fi
   else
     # failed
@@ -58,6 +60,8 @@ function finalcleanup {
       echo "export CONCRETE_ANALYZE_STATUS=failed" >> ~/.bash_profile
     elif [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
       echo "export CONCRETE_ARCHIVE_STATUS=failed" >> ~/.bash_profile
+    elif [ -n "$CONCRETE_ACTION_UNITTEST" ]; then
+      echo "export CONCRETE_UNITTEST_STATUS=failed" >> ~/.bash_profile
     fi
   fi
 }
@@ -142,6 +146,15 @@ if [ -n "$CONCRETE_ACTION_BUILD" ]; then
     $XCODE_PROJECT_ACTION "$projectfile" \
     -scheme "$CONCRETE_SCHEME" \
     clean build \
+    -destination 'platform=iOS Simulator,name=iPad' \
+    CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
+    PROVISIONING_PROFILE="$PROFILE_UUID" \
+    OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
+if [ -n "$CONCRETE_ACTION_UNITTEST" ]; then
+  $build_tool \
+    $XCODE_PROJECT_ACTION "$projectfile" \
+    -scheme "$CONCRETE_SCHEME" \
+    clean test \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
@@ -173,6 +186,8 @@ echo "XCODEBUILD_STATUS: $XCODEBUILD_STATUS"
 if [[ -n "$CONCRETE_ACTION_BUILD" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
   is_build_action_success=1
 elif [[ -n "$CONCRETE_ACTION_ANALYZE" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
+  is_build_action_success=1
+elif [[ -n "$CONCRETE_ACTION_UNITTEST" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
   is_build_action_success=1
 fi
 

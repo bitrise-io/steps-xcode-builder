@@ -23,3 +23,11 @@ steps-xcode-builder
 - CONCRETE_ARCHIVE_STATUS=[success/failed]
 - CONCRETE_IPA_PATH
 - CONCRETE_DSYM_PATH
+
+
+## TODO:
+
+### Tests
+
+- allow define the 'platform', so the tests can be run with a specific iOS Simulator
+- xctool support for tests
