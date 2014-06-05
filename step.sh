@@ -80,6 +80,15 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
   echo " (i) DSYM_ZIP_PATH=$DSYM_ZIP_PATH"
 fi
 
+if [ -n "$CONCRETE_ACTION_UNITTEST" ]; then
+  unittest_simulator_name="iPad"
+  if [ -n "$UNITTEST_PLATFORM_NAME" ]; then
+    unittest_simulator_name="$UNITTEST_PLATFORM_NAME"
+  fi
+  unittest_device_destination="platform=iOS Simulator,name=$unittest_simulator_name"
+  echo " (i) UnitTest Device Destination: $unittest_device_destination"
+fi
+
 # Get provisioning profile
 echo "---> Downloading Provision Profile..."
 export PROVISION_PATH="$CONCRETE_PROFILE_DIR/profile.mobileprovision"
@@ -146,7 +155,6 @@ if [ -n "$CONCRETE_ACTION_BUILD" ]; then
     $XCODE_PROJECT_ACTION "$projectfile" \
     -scheme "$CONCRETE_SCHEME" \
     clean build \
-    -destination 'platform=iOS Simulator,name=iPad' \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
@@ -155,7 +163,7 @@ elif [ -n "$CONCRETE_ACTION_UNITTEST" ]; then
     $XCODE_PROJECT_ACTION "$projectfile" \
     -scheme "$CONCRETE_SCHEME" \
     clean test \
-    -destination 'platform=iOS Simulator,name=iPad' \
+    -destination "$unittest_device_destination" \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
