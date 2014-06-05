@@ -11,7 +11,14 @@ steps-xcode-builder
 - CONCRETE_BUILD_TOOL: "xcodebuild" is the default; "xctool" is supported; CONCRETE_ARCHIVE_STATUS can only use "xcodebuild"
 
 ## UnitTest specific inputs
-- UNITTEST_PLATFORM_NAME: device to run the tests with, will be appended to the "platform=iOS Simulator,name=" `-destination` flag of the xcodebuild command. Default is "iPad". For iPhone devices you have to specify the full name of the simulator device, like: "iPhone Retina (4-inch)"
+- UNITTEST_PLATFORM_NAME: device to run the tests with, will be appended to the "platform=iOS Simulator,name=" `-destination` flag of the xcodebuild command. Default is "iPad". For iPhone devices you have to specify the full name of the simulator device, like: "iPhone Retina (4-inch)" - as it is shown in Xcode's device selection dropdown UI. You can specify the OS version too, by appending "OS=x.x" where x.x is the OS version. A few examples:
+    - iPhone Retina (4-inch)
+    - iPhone Retina (4-inch),OS=7.1
+    - iPhone Retina (4-inch 64-bit)
+    - iPad
+    - iPad,OS=7.1
+    - iPad Retina (64-bit)
+
 
 # Output Environment Variables
 (accessible for Steps running after this Step)
