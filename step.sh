@@ -155,6 +155,7 @@ elif [ -n "$CONCRETE_ACTION_UNITTEST" ]; then
     $XCODE_PROJECT_ACTION "$projectfile" \
     -scheme "$CONCRETE_SCHEME" \
     clean test \
+    -destination 'platform=iOS Simulator,name=iPad' \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
