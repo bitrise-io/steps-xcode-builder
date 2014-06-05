@@ -164,6 +164,7 @@ elif [ -n "$CONCRETE_ACTION_UNITTEST" ]; then
     -scheme "$CONCRETE_SCHEME" \
     clean test \
     -destination "$unittest_device_destination" \
+    -sdk iphonesimulator \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
