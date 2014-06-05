@@ -82,10 +82,11 @@ fi
 
 if [ -n "$CONCRETE_ACTION_UNITTEST" ]; then
   unittest_simulator_name="iPad"
-  if [ -n "$UNITTEST_PLATFORM_NAME"]; then
+  if [ -n "$UNITTEST_PLATFORM_NAME" ]; then
     unittest_simulator_name="$UNITTEST_PLATFORM_NAME"
   fi
   unittest_device_destination="platform=iOS Simulator,name=$unittest_simulator_name"
+  echo " (i) UnitTest Device Destination: $unittest_device_destination"
 fi
 
 # Get provisioning profile
