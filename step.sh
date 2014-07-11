@@ -1,28 +1,28 @@
 #!/bin/bash
 
-echo "$ cd $CONCRETE_SOURCE_DIR"
-cd "$CONCRETE_SOURCE_DIR"
+echo "$ cd $BITRISE_SOURCE_DIR"
+cd "$BITRISE_SOURCE_DIR"
 
-if [[ $CONCRETE_PROJECT_PATH == *".xcodeproj" ]]; then
+if [[ $BITRISE_PROJECT_PATH == *".xcodeproj" ]]; then
   export XCODE_PROJECT_ACTION="-project"
-elif [[ $CONCRETE_PROJECT_PATH == *".xcworkspace" ]]; then
+elif [[ $BITRISE_PROJECT_PATH == *".xcworkspace" ]]; then
   export XCODE_PROJECT_ACTION="-workspace"
 else
-  echo "Failed to get valid project file: $CONCRETE_PROJECT_PATH"
+  echo "Failed to get valid project file: $BITRISE_PROJECT_PATH"
   exit 1
 fi
 
-projectdir="$(dirname "$CONCRETE_PROJECT_PATH")"
-projectfile="$(basename "$CONCRETE_PROJECT_PATH")"
+projectdir="$(dirname "$BITRISE_PROJECT_PATH")"
+projectfile="$(basename "$BITRISE_PROJECT_PATH")"
 echo "$ cd $projectdir"
 cd "$projectdir"
 
-build_tool="$CONCRETE_BUILD_TOOL"
+build_tool="$BITRISE_BUILD_TOOL"
 echo " [i] Specified Build Tool: $build_tool"
 if [ -z "$build_tool" ]; then
   build_tool="xcodebuild"
 fi
-if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
+if [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
   if [[ "$build_tool" != "xcodebuild" ]]; then
     build_tool="xcodebuild"
     echo " [!] Build Tool set to xcodebuild - for Archive action only xcodebuild is supported!"
@@ -34,8 +34,8 @@ is_build_action_success=0
 function finalcleanup {
   echo "-> finalcleanup"
   unset UUID
-  rm "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
-  $CONCRETE_STEP_DIR/keychain.sh remove
+  rm "$BITRISE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
+  $BITRISE_STEP_DIR/keychain.sh remove
 
   # Remove downloaded files
   rm $PROVISION_PATH
@@ -43,25 +43,25 @@ function finalcleanup {
 
   if [ $is_build_action_success -eq 1 ] ; then
     # success
-    if [ -n "$CONCRETE_ACTION_BUILD" ]; then
-      echo "export CONCRETE_BUILD_STATUS=succeeded" >> ~/.bash_profile
-    elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
-      echo "export CONCRETE_ANALYZE_STATUS=succeeded" >> ~/.bash_profile
-    elif [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
-      echo "export CONCRETE_ARCHIVE_STATUS=succeeded" >> ~/.bash_profile
-    elif [ -n "$CONCRETE_ACTION_UNITTEST" ]; then
-      echo "export CONCRETE_UNITTEST_STATUS=succeeded" >> ~/.bash_profile
+    if [ -n "$BITRISE_ACTION_BUILD" ]; then
+      echo "export BITRISE_BUILD_STATUS=succeeded" >> ~/.bash_profile
+    elif [ -n "$BITRISE_ACTION_ANALYZE" ]; then
+      echo "export BITRISE_ANALYZE_STATUS=succeeded" >> ~/.bash_profile
+    elif [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
+      echo "export BITRISE_ARCHIVE_STATUS=succeeded" >> ~/.bash_profile
+    elif [ -n "$BITRISE_ACTION_UNITTEST" ]; then
+      echo "export BITRISE_UNITTEST_STATUS=succeeded" >> ~/.bash_profile
     fi
   else
     # failed
-    if [ -n "$CONCRETE_ACTION_BUILD" ]; then
-      echo "export CONCRETE_BUILD_STATUS=failed" >> ~/.bash_profile
-    elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
-      echo "export CONCRETE_ANALYZE_STATUS=failed" >> ~/.bash_profile
-    elif [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
-      echo "export CONCRETE_ARCHIVE_STATUS=failed" >> ~/.bash_profile
-    elif [ -n "$CONCRETE_ACTION_UNITTEST" ]; then
-      echo "export CONCRETE_UNITTEST_STATUS=failed" >> ~/.bash_profile
+    if [ -n "$BITRISE_ACTION_BUILD" ]; then
+      echo "export BITRISE_BUILD_STATUS=failed" >> ~/.bash_profile
+    elif [ -n "$BITRISE_ACTION_ANALYZE" ]; then
+      echo "export BITRISE_ANALYZE_STATUS=failed" >> ~/.bash_profile
+    elif [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
+      echo "export BITRISE_ARCHIVE_STATUS=failed" >> ~/.bash_profile
+    elif [ -n "$BITRISE_ACTION_UNITTEST" ]; then
+      echo "export BITRISE_UNITTEST_STATUS=failed" >> ~/.bash_profile
     fi
   fi
 }
@@ -69,18 +69,18 @@ function finalcleanup {
 echo "XCODE_PROJECT_ACTION: $XCODE_PROJECT_ACTION"
 
 # Create directory structure
-$CONCRETE_STEP_DIR/create_directory_structure.sh
+$BITRISE_STEP_DIR/create_directory_structure.sh
 
-if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
-  export ARCHIVE_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.xcarchive"
+if [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
+  export ARCHIVE_PATH="$BITRISE_DEPLOY_DIR/$BITRISE_SCHEME.xcarchive"
   echo " (i) ARCHIVE_PATH=$ARCHIVE_PATH"
-  export EXPORT_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME"
+  export EXPORT_PATH="$BITRISE_DEPLOY_DIR/$BITRISE_SCHEME"
   echo " (i) EXPORT_PATH=$EXPORT_PATH"
-  export DSYM_ZIP_PATH="$CONCRETE_DEPLOY_DIR/$CONCRETE_SCHEME.dSYM.zip"
+  export DSYM_ZIP_PATH="$BITRISE_DEPLOY_DIR/$BITRISE_SCHEME.dSYM.zip"
   echo " (i) DSYM_ZIP_PATH=$DSYM_ZIP_PATH"
 fi
 
-if [ -n "$CONCRETE_ACTION_UNITTEST" ]; then
+if [ -n "$BITRISE_ACTION_UNITTEST" ]; then
   unittest_simulator_name="iPad"
   if [ -n "$UNITTEST_PLATFORM_NAME" ]; then
     unittest_simulator_name="$UNITTEST_PLATFORM_NAME"
@@ -91,13 +91,13 @@ fi
 
 # Get provisioning profile
 echo "---> Downloading Provision Profile..."
-export PROVISION_PATH="$CONCRETE_PROFILE_DIR/profile.mobileprovision"
-curl -fso "$PROVISION_PATH" "$CONCRETE_PROVISION_URL"
+export PROVISION_PATH="$BITRISE_PROFILE_DIR/profile.mobileprovision"
+curl -fso "$PROVISION_PATH" "$BITRISE_PROVISION_URL"
 prov_profile_curl_result=$?
 if [ $prov_profile_curl_result -ne 0 ]; then
   echo " (i) First download attempt failed - retry..."
   sleep 5
-  curl -fso "$PROVISION_PATH" "$CONCRETE_PROVISION_URL"
+  curl -fso "$PROVISION_PATH" "$BITRISE_PROVISION_URL"
   prov_profile_curl_result=$?
 fi
 echo "PROVISION_PATH: $PROVISION_PATH"
@@ -112,13 +112,13 @@ fi
 
 # Get certificate
 echo "---> Downloading Certificate..."
-export CERTIFICATE_PATH="$CONCRETE_PROFILE_DIR/Certificate.p12"
-curl -fso "$CERTIFICATE_PATH" "$CONCRETE_CERTIFICATE_URL"
+export CERTIFICATE_PATH="$BITRISE_PROFILE_DIR/Certificate.p12"
+curl -fso "$CERTIFICATE_PATH" "$BITRISE_CERTIFICATE_URL"
 cert_curl_result=$?
 if [ $cert_curl_result -ne 0 ]; then
   echo " (i) First download attempt failed - retry..."
   sleep 5
-  curl -fso "$CERTIFICATE_PATH" "$CONCRETE_CERTIFICATE_URL"
+  curl -fso "$CERTIFICATE_PATH" "$BITRISE_CERTIFICATE_URL"
   cert_curl_result=$?
 fi
 echo "CERTIFICATE_PATH: $CERTIFICATE_PATH"
@@ -132,13 +132,13 @@ else
 fi
 
 echo "$ keychain.sh add"
-$CONCRETE_STEP_DIR/keychain.sh add
+$BITRISE_STEP_DIR/keychain.sh add
 
 # Get UUID & install provision profile
 uuid_key=$(grep -aA1 UUID "$PROVISION_PATH")
 export PROFILE_UUID=$([[ $uuid_key =~ ([-A-Z0-9]{36}) ]] && echo ${BASH_REMATCH[1]})
-cp "$PROVISION_PATH" "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
-if [[ ! -f "$CONCRETE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision" ]]; then
+cp "$PROVISION_PATH" "$BITRISE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
+if [[ ! -f "$BITRISE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision" ]]; then
   echo " [!] Mobileprovision file: File not found - probably copy failed!"
   finalcleanup
   exit 1
@@ -146,44 +146,44 @@ fi
 echo "PROFILE_UUID: $PROFILE_UUID"
 
 # Get identities from certificate
-export CERTIFICATE_IDENTITY=$(security find-certificate -a $CONCRETE_KEYCHAIN | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
+export CERTIFICATE_IDENTITY=$(security find-certificate -a $BITRISE_KEYCHAIN | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
 echo "CERTIFICATE_IDENTITY: $CERTIFICATE_IDENTITY"
 
 # Start the build
-if [ -n "$CONCRETE_ACTION_BUILD" ]; then
+if [ -n "$BITRISE_ACTION_BUILD" ]; then
   $build_tool \
     $XCODE_PROJECT_ACTION "$projectfile" \
-    -scheme "$CONCRETE_SCHEME" \
+    -scheme "$BITRISE_SCHEME" \
     clean build \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
-    OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
-elif [ -n "$CONCRETE_ACTION_UNITTEST" ]; then
+    OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
+elif [ -n "$BITRISE_ACTION_UNITTEST" ]; then
   $build_tool \
     $XCODE_PROJECT_ACTION "$projectfile" \
-    -scheme "$CONCRETE_SCHEME" \
+    -scheme "$BITRISE_SCHEME" \
     clean test \
     -destination "$unittest_device_destination" \
     -sdk iphonesimulator \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
-    OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
-elif [ -n "$CONCRETE_ACTION_ANALYZE" ]; then
+    OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
+elif [ -n "$BITRISE_ACTION_ANALYZE" ]; then
   $build_tool \
     $XCODE_PROJECT_ACTION "$projectfile" \
-    -scheme "$CONCRETE_SCHEME" \
+    -scheme "$BITRISE_SCHEME" \
     clean analyze \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
-    OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
-elif [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
+    OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
+elif [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
   $build_tool \
     $XCODE_PROJECT_ACTION "$projectfile" \
-    -scheme "$CONCRETE_SCHEME" \
+    -scheme "$BITRISE_SCHEME" \
     clean archive -archivePath "$ARCHIVE_PATH" \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
-    OTHER_CODE_SIGN_FLAGS="--keychain $CONCRETE_KEYCHAIN"
+    OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
 fi
 
 if [ $? -eq 0 ]; then
@@ -193,11 +193,11 @@ else
 fi
 echo "XCODEBUILD_STATUS: $XCODEBUILD_STATUS"
 
-if [[ -n "$CONCRETE_ACTION_BUILD" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
+if [[ -n "$BITRISE_ACTION_BUILD" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
   is_build_action_success=1
-elif [[ -n "$CONCRETE_ACTION_ANALYZE" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
+elif [[ -n "$BITRISE_ACTION_ANALYZE" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
   is_build_action_success=1
-elif [[ -n "$CONCRETE_ACTION_UNITTEST" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
+elif [[ -n "$BITRISE_ACTION_UNITTEST" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
   is_build_action_success=1
 fi
 
@@ -207,7 +207,7 @@ if [ "$XCODEBUILD_STATUS" != "succeeded" ]; then
 fi
 
 # Export ipa if everyting succeeded
-if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
+if [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
   if [[ "$XCODEBUILD_STATUS" == "succeeded" ]]; then
     # Export ipa
     echo "Generating signed IPA"
@@ -226,7 +226,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
     else
       echo " (i) Archive build success"
     fi
-    echo "export CONCRETE_IPA_PATH='$EXPORT_PATH.ipa'" >> ~/.bash_profile
+    echo "export BITRISE_IPA_PATH='$EXPORT_PATH.ipa'" >> ~/.bash_profile
 
     # get the .app.dSYM folders from the dSYMs archive folder
     archive_dsyms_folder="${ARCHIVE_PATH}/dSYMs"
@@ -267,7 +267,7 @@ if [ -n "$CONCRETE_ACTION_ARCHIVE" ]; then
         finalcleanup
         exit $ecode
       fi
-      echo "export CONCRETE_DSYM_PATH='$DSYM_ZIP_PATH'" >> ~/.bash_profile
+      echo "export BITRISE_DSYM_PATH='$DSYM_ZIP_PATH'" >> ~/.bash_profile
       is_build_action_success=1
     else
       echo " [!] Error: No dSYM file found in ${DSYM_PATH}"
