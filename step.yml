@@ -5,34 +5,34 @@ description: |
 inputs:
   - title: |
       Project file path (.xcodeproj or .xcworkspace), relative to the repository root.
-    mapped_to: CONCRETE_PROJECT_PATH
+    mapped_to: BITRISE_PROJECT_PATH
   - title: |
       Scheme in the Project to build
-    mapped_to: CONCRETE_SCHEME
+    mapped_to: BITRISE_SCHEME
   - title: |
       Action Build: set it to 'true' to perform Xcode 'build' action
-    mapped_to: CONCRETE_ACTION_BUILD
+    mapped_to: BITRISE_ACTION_BUILD
   - title: |
       Action Analyze: set it to 'true' to perform Xcode 'analyze' action
-    mapped_to: CONCRETE_ACTION_ANALYZE
+    mapped_to: BITRISE_ACTION_ANALYZE
   - title: |
       Action Archive: set it to 'true' to perform Xcode 'archive' action
-    mapped_to: CONCRETE_ACTION_ARCHIVE
+    mapped_to: BITRISE_ACTION_ARCHIVE
   - title: |
       Action UnitTest: set it to 'true' to perform Xcode 'test' action
-    mapped_to: CONCRETE_ACTION_UNITTEST
+    mapped_to: BITRISE_ACTION_UNITTEST
   - title: |
       Certificate URL
-    mapped_to: CONCRETE_CERTIFICATE_URL
+    mapped_to: BITRISE_CERTIFICATE_URL
   - title: |
       Certificate Passphrase
-    mapped_to: CONCRETE_CERTIFICATE_PASSPHRASE
+    mapped_to: BITRISE_CERTIFICATE_PASSPHRASE
   - title: |
       Provisioning Profile URL
-    mapped_to: CONCRETE_PROVISION_URL
+    mapped_to: BITRISE_PROVISION_URL
   - title: |
-      Build Tool: "xcodebuild" is the default; "xctool" is supported; CONCRETE_ACTION_ARCHIVE and CONCRETE_ACTION_UNITTEST can only use "xcodebuild"
-    mapped_to: CONCRETE_BUILD_TOOL
+      Build Tool: "xcodebuild" is the default; "xctool" is supported; BITRISE_ACTION_ARCHIVE and BITRISE_ACTION_UNITTEST can only use "xcodebuild"
+    mapped_to: BITRISE_BUILD_TOOL
 # UnitTest specific inputs
   - title: |
       [UNITTEST] Device to run the tests with, will be appended to the "platform=iOS Simulator,name=" `-destination` flag of the xcodebuild command. Default is "iPad". For other simulator devices set it as it is shown in Xcode's device selection dropdown UI.
@@ -40,25 +40,25 @@ inputs:
 
 
 outputs:
-# if CONCRETE_ACTION_BUILD
+# if BITRISE_ACTION_BUILD
   - title: |
       Build action result: 'succeeded' or 'failed'
-    mapped_to: CONCRETE_BUILD_STATUS
-# if CONCRETE_ACTION_ANALYZE
+    mapped_to: BITRISE_BUILD_STATUS
+# if BITRISE_ACTION_ANALYZE
   - title: |
       Analyze action result: 'succeeded' or 'failed'
-    mapped_to: CONCRETE_ANALYZE_STATUS
-# if CONCRETE_ACTION_UNITTEST
+    mapped_to: BITRISE_ANALYZE_STATUS
+# if BITRISE_ACTION_UNITTEST
   - title: |
       UnitTest action result: 'succeeded' or 'failed'
-    mapped_to: CONCRETE_UNITTEST_STATUS
-# if CONCRETE_ACTION_ARCHIVE
+    mapped_to: BITRISE_UNITTEST_STATUS
+# if BITRISE_ACTION_ARCHIVE
   - title: |
       Archive action result: 'succeeded' or 'failed'
-    mapped_to: CONCRETE_ARCHIVE_STATUS
+    mapped_to: BITRISE_ARCHIVE_STATUS
   - title: |
       Xcode archive IPA file path
-    mapped_to: CONCRETE_IPA_PATH
+    mapped_to: BITRISE_IPA_PATH
   - title: |
       Xcode archive DSYM path
-    mapped_to: CONCRETE_DSYM_PATH
+    mapped_to: BITRISE_DSYM_PATH
