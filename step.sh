@@ -135,9 +135,9 @@ echo "$ keychain.sh add"
 $BITRISE_STEP_DIR/keychain.sh add
 
 # Get UUID & install provision profile
-uuid_key=$(grep -aA1 UUID "$PROVISION_PATH")
-export PROFILE_UUID=$([[ $uuid_key =~ ([-A-Z0-9]{36}) ]] && echo ${BASH_REMATCH[1]})
+export PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i "$PROVISION_PATH"))
 cp "$PROVISION_PATH" "$BITRISE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
+
 if [[ ! -f "$BITRISE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision" ]]; then
   echo " [!] Mobileprovision file: File not found - probably copy failed!"
   finalcleanup
