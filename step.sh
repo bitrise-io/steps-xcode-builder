@@ -187,6 +187,9 @@ elif [ -n "$BITRISE_ACTION_UNITTEST" ]; then
   #   PROVISIONING_PROFILE="$PROFILE_UUID" \
   #   OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
   KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}" KEYCHAIN_PATH="${BITRISE_KEYCHAIN}" PROVISIONING_PROFILE="${PROFILE_UUID}" CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" BUILD_PROJECTDIR="${BITRISE_SOURCE_DIR}" BUILD_PROJECTFILE="${projectfile}" BUILD_BUILDTOOL="${build_tool}" BUILD_SCHEME="${BITRISE_SCHEME}" BUILD_DEVICENAME="${unittest_simulator_name}" bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
+
+  echo " (DEBUG) XCUServer log: "
+  cat ~/logs/bitrise.tools.osx.xcuserver.log
 elif [ -n "$BITRISE_ACTION_ANALYZE" ]; then
   $build_tool \
     $XCODE_PROJECT_ACTION "$projectfile" \
