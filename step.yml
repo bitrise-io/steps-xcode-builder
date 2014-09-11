@@ -33,13 +33,13 @@ inputs:
   - title: |
       Build Tool: "xcodebuild" is the default; "xctool" is supported; BITRISE_ACTION_ARCHIVE and BITRISE_ACTION_UNITTEST can only use "xcodebuild"
     mapped_to: BITRISE_BUILD_TOOL
+  - title: |
+      (Optional) Xcode Version to use. Default is "5".
+    mapped_to: XCODE_BUILDER_USE_XCODE_VERSION
 # UnitTest specific inputs
   - title: |
       [UNITTEST] Device to run the tests with, will be appended to the "platform=iOS Simulator,name=" `-destination` flag of the xcodebuild command. Default is "iPad". For other simulator devices set it as it is shown in Xcode's device selection dropdown UI.
     mapped_to: UNITTEST_PLATFORM_NAME
-  - title: |
-      Xcode Version to use. Default is "5".
-    mapped_to: XCODE_BUILDER_USE_XCODE_VERSION
 
 
 outputs:
