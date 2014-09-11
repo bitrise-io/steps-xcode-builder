@@ -24,6 +24,8 @@ if [ $? -ne 0 ]; then
   echo " [!] Failed to select the specified Xcode version!"
   exit 1
 fi
+echo " (i) Using Xcode version:"
+xcodebuild -version
 
 projectdir="$(dirname "$BITRISE_PROJECT_PATH")"
 projectfile="$(basename "$BITRISE_PROJECT_PATH")"
@@ -144,6 +146,9 @@ else
   echo " -> CERTIFICATE_PATH: OK"
 fi
 
+# LC_ALL: required for tr, for more info: http://unix.stackexchange.com/questions/45404/why-cant-tr-read-from-dev-urandom-on-osx
+keychain_pass="$(cat /dev/urandom | LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
+export KEYCHAIN_PASSPHRASE="${keychain_pass}"
 echo "$ keychain.sh add"
 bash "${THIS_SCRIPT_DIR}/keychain.sh" add
 
