@@ -1,0 +1,8 @@
+{
+	"deps": [
+		{
+			"url": "https://github.com/bitrise-io/bitrise-utils.git",
+			"store_path": "bitrise_utils"
+		}
+	]
+}

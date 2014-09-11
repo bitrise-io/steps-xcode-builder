@@ -1,5 +1,7 @@
 #!/bin/bash
 
+THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 echo "$ cd $BITRISE_SOURCE_DIR"
 cd "$BITRISE_SOURCE_DIR"
 
@@ -11,6 +13,19 @@ else
   echo "Failed to get valid project file: $BITRISE_PROJECT_PATH"
   exit 1
 fi
+
+use_xcode_version="6"
+if [ -n "${XCODE_BUILDER_USE_XCODE_VERSION}" ]; then
+  use_xcode_version="${XCODE_BUILDER_USE_XCODE_VERSION}"
+fi
+echo " (i) Specified Xcode Version to use: ${XCODE_BUILDER_USE_XCODE_VERSION}"
+bash "${THIS_SCRIPT_DIR}/bitrise_utils/select_xcode_version.sh" "${use_xcode_version}"
+if [ $? -ne 0 ]; then
+  echo " [!] Failed to select the specified Xcode version!"
+  exit 1
+fi
+echo " (i) Using Xcode version:"
+xcodebuild -version
 
 projectdir="$(dirname "$BITRISE_PROJECT_PATH")"
 projectfile="$(basename "$BITRISE_PROJECT_PATH")"
@@ -35,7 +50,7 @@ function finalcleanup {
   echo "-> finalcleanup"
   unset UUID
   rm "$BITRISE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
-  $BITRISE_STEP_DIR/keychain.sh remove
+  bash "${THIS_SCRIPT_DIR}/keychain.sh" remove
 
   # Remove downloaded files
   rm $PROVISION_PATH
@@ -69,7 +84,7 @@ function finalcleanup {
 echo "XCODE_PROJECT_ACTION: $XCODE_PROJECT_ACTION"
 
 # Create directory structure
-$BITRISE_STEP_DIR/create_directory_structure.sh
+bash "${THIS_SCRIPT_DIR}/create_directory_structure.sh"
 
 if [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
   export ARCHIVE_PATH="$BITRISE_DEPLOY_DIR/$BITRISE_SCHEME.xcarchive"
@@ -131,8 +146,11 @@ else
   echo " -> CERTIFICATE_PATH: OK"
 fi
 
+# LC_ALL: required for tr, for more info: http://unix.stackexchange.com/questions/45404/why-cant-tr-read-from-dev-urandom-on-osx
+keychain_pass="$(cat /dev/urandom | LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
+export KEYCHAIN_PASSPHRASE="${keychain_pass}"
 echo "$ keychain.sh add"
-$BITRISE_STEP_DIR/keychain.sh add
+bash "${THIS_SCRIPT_DIR}/keychain.sh" add
 
 # Get UUID & install provision profile
 export PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i "$PROVISION_PATH"))
@@ -159,15 +177,24 @@ if [ -n "$BITRISE_ACTION_BUILD" ]; then
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
 elif [ -n "$BITRISE_ACTION_UNITTEST" ]; then
-  $build_tool \
-    $XCODE_PROJECT_ACTION "$projectfile" \
-    -scheme "$BITRISE_SCHEME" \
-    clean test \
-    -destination "$unittest_device_destination" \
-    -sdk iphonesimulator \
-    CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
-    PROVISIONING_PROFILE="$PROFILE_UUID" \
-    OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
+  #
+  # OLD METHOD (doesn't work well if it runs through SSH)
+  #
+
+  # $build_tool \
+  #   $XCODE_PROJECT_ACTION "$projectfile" \
+  #   -scheme "$BITRISE_SCHEME" \
+  #   clean test \
+  #   -destination "$unittest_device_destination" \
+  #   -sdk iphonesimulator \
+  #   CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
+  #   PROVISIONING_PROFILE="$PROFILE_UUID" \
+  #   OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
+
+  #
+  # xcuserver based solution (works through SSH)
+  #
+  KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}" KEYCHAIN_NAME="${BITRISE_KEYCHAIN}" PROVISIONING_PROFILE="${PROFILE_UUID}" CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" BUILD_PROJECTDIR="${BITRISE_SOURCE_DIR}" BUILD_PROJECTFILE="${projectfile}" BUILD_BUILDTOOL="${build_tool}" BUILD_SCHEME="${BITRISE_SCHEME}" BUILD_DEVICENAME="${unittest_simulator_name}" bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
 elif [ -n "$BITRISE_ACTION_ANALYZE" ]; then
   $build_tool \
     $XCODE_PROJECT_ACTION "$projectfile" \
