@@ -9,7 +9,7 @@ param_scheme="${BUILD_SCHEME}"
 param_device_name="${BUILD_DEVICENAME}"
 code_sign_identity="${CODE_SIGN_IDENTITY}"
 provisioning_profile="${PROVISIONING_PROFILE}"
-keychain_path="${KEYCHAIN_PATH}"
+keychain_name="${KEYCHAIN_NAME}"
 keychain_password="${KEYCHAIN_PASSWORD}"
 
 echo " (i) param_projectdir: ${param_projectdir}"
@@ -20,7 +20,7 @@ echo " (i) param_device_name: ${param_device_name}"
 
 echo " (i) code_sign_identity: ${code_sign_identity}"
 echo " (i) provisioning_profile: ${provisioning_profile}"
-echo " (i) keychain_path: ${keychain_path}"
+echo " (i) keychain_name: ${keychain_name}"
 echo " (i) keychain_password: ${keychain_password}"
 
 buildlogpath="${HOME}/logs/xcuserver_build.log"
@@ -42,7 +42,7 @@ devicedestination=platform=iOS Simulator,name=${param_device_name}
 outputlogpath=${buildlogpath}
 code_sign_identity=${code_sign_identity}
 provisioning_profile=${provisioning_profile}
-keychain_path=${keychain_path}
+keychain_name=${keychain_name}
 keychain_password=${keychain_password}
 EOL
 if [ $? -ne 0 ]; then
