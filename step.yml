@@ -34,7 +34,7 @@ inputs:
       Build Tool: "xcodebuild" is the default; "xctool" is supported; BITRISE_ACTION_ARCHIVE and BITRISE_ACTION_UNITTEST can only use "xcodebuild"
     mapped_to: BITRISE_BUILD_TOOL
   - title: |
-      (Optional) Xcode Version to use. Default is "5".
+      (Optional) Xcode Version to use. Default is "6".
     mapped_to: XCODE_BUILDER_USE_XCODE_VERSION
 # UnitTest specific inputs
   - title: |

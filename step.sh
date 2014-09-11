@@ -14,7 +14,7 @@ else
   exit 1
 fi
 
-use_xcode_version="5"
+use_xcode_version="6"
 if [ -n "${XCODE_BUILDER_USE_XCODE_VERSION}" ]; then
   use_xcode_version="${XCODE_BUILDER_USE_XCODE_VERSION}"
 fi
@@ -177,6 +177,10 @@ if [ -n "$BITRISE_ACTION_BUILD" ]; then
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
 elif [ -n "$BITRISE_ACTION_UNITTEST" ]; then
+  #
+  # OLD METHOD (doesn't work well if it runs through SSH)
+  #
+
   # $build_tool \
   #   $XCODE_PROJECT_ACTION "$projectfile" \
   #   -scheme "$BITRISE_SCHEME" \
@@ -186,6 +190,10 @@ elif [ -n "$BITRISE_ACTION_UNITTEST" ]; then
   #   CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
   #   PROVISIONING_PROFILE="$PROFILE_UUID" \
   #   OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
+
+  #
+  # xcuserver based solution (works through SSH)
+  #
   KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}" KEYCHAIN_PATH="${BITRISE_KEYCHAIN}" PROVISIONING_PROFILE="${PROFILE_UUID}" CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" BUILD_PROJECTDIR="${BITRISE_SOURCE_DIR}" BUILD_PROJECTFILE="${projectfile}" BUILD_BUILDTOOL="${build_tool}" BUILD_SCHEME="${BITRISE_SCHEME}" BUILD_DEVICENAME="${unittest_simulator_name}" bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
 elif [ -n "$BITRISE_ACTION_ANALYZE" ]; then
   $build_tool \
