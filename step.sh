@@ -1,5 +1,7 @@
 #!/bin/bash
 
+THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 echo "$ cd $BITRISE_SOURCE_DIR"
 cd "$BITRISE_SOURCE_DIR"
 
@@ -35,7 +37,7 @@ function finalcleanup {
   echo "-> finalcleanup"
   unset UUID
   rm "$BITRISE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
-  $BITRISE_STEP_DIR/keychain.sh remove
+  bash "${THIS_SCRIPT_DIR}/keychain.sh" remove
 
   # Remove downloaded files
   rm $PROVISION_PATH
@@ -69,7 +71,7 @@ function finalcleanup {
 echo "XCODE_PROJECT_ACTION: $XCODE_PROJECT_ACTION"
 
 # Create directory structure
-$BITRISE_STEP_DIR/create_directory_structure.sh
+bash "${THIS_SCRIPT_DIR}/create_directory_structure.sh"
 
 if [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
   export ARCHIVE_PATH="$BITRISE_DEPLOY_DIR/$BITRISE_SCHEME.xcarchive"
@@ -132,7 +134,7 @@ else
 fi
 
 echo "$ keychain.sh add"
-$BITRISE_STEP_DIR/keychain.sh add
+bash "${THIS_SCRIPT_DIR}/keychain.sh" add
 
 # Get UUID & install provision profile
 export PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i "$PROVISION_PATH"))
