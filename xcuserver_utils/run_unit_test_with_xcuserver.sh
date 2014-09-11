@@ -59,6 +59,9 @@ fi
 	# sleep 2
 	# open -a iPhone\ Simulator
 	# sleep 5
+
+	# -> simulator reset scripts will prompt for Accessibility at the first runs!
+	#  		if you decide to use it you'll have to run it a few times and accept these prompts
 	# osascript "${THIS_SCRIPT_DIR}/simulator_reset_content_6.osascript"
 	# sleep 10
 
