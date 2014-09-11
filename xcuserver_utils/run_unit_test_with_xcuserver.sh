@@ -18,6 +18,11 @@ echo " (i) param_buildtool: ${param_buildtool}"
 echo " (i) param_scheme: ${param_scheme}"
 echo " (i) param_device_name: ${param_device_name}"
 
+echo " (i) code_sign_identity: ${code_sign_identity}"
+echo " (i) provisioning_profile: ${provisioning_profile}"
+echo " (i) keychain_path: ${keychain_path}"
+echo " (i) keychain_password: ${keychain_password}"
+
 buildlogpath="${HOME}/logs/xcuserver_build.log"
 
 endsequence="XCODEBUILDUNITTESTFINISHED:"
