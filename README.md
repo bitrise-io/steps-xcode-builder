@@ -36,3 +36,12 @@ steps-xcode-builder
 - BITRISE_ARCHIVE_STATUS=[succeeded/failed]
 - BITRISE_IPA_PATH
 - BITRISE_DSYM_PATH
+
+# Unit Tests
+
+The iPhone/iOS Simulator is tightly integrated with OS X and it's not an easy task to run Unit Tests with it reliably, especially through SSH.
+
+Because of this we use Bitrise's *xcodebuild-unittest-miniserver* (xcuserver) to run our Unit Tests. You can find it's code on GitHub: [https://github.com/bitrise-io/xcodebuild-unittest-miniserver](https://github.com/bitrise-io/xcodebuild-unittest-miniserver).
+
+The xcuserver is preinstalled on Bitrise's OS X VMs and started with launchctl (in a proper GUI context required for the iPhone/iOS Simulator) automatically when the user logs in.
+

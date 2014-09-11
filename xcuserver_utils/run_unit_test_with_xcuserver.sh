@@ -50,9 +50,6 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
-#
-# ?????????? Xcode 6 only? -> for 5 use the old method?
-#
 
 (
 	# Xcode 5 Simulator:
