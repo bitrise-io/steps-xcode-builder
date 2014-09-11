@@ -7,6 +7,10 @@ param_projectfile="${BUILD_PROJECTFILE}"
 param_buildtool="${BUILD_BUILDTOOL}"
 param_scheme="${BUILD_SCHEME}"
 param_device_name="${BUILD_DEVICENAME}"
+code_sign_identity="${CODE_SIGN_IDENTITY}"
+provisioning_profile="${PROVISIONING_PROFILE}"
+keychain_path="${KEYCHAIN_PATH}"
+keychain_password="${KEYCHAIN_PASSWORD}"
 
 echo " (i) param_projectdir: ${param_projectdir}"
 echo " (i) param_projectfile: ${param_projectfile}"
@@ -31,6 +35,10 @@ buildtool=${param_buildtool}
 scheme=${param_scheme}
 devicedestination=platform=iOS Simulator,name=${param_device_name}
 outputlogpath=${buildlogpath}
+code_sign_identity=${code_sign_identity}
+provisioning_profile=${provisioning_profile}
+keychain_path=${keychain_path}
+keychain_password=${keychain_password}
 EOL
 if [ $? -ne 0 ]; then
 	echo " [!] Failed to write the XCUServer Build Config to path: ${build_config_path}"
