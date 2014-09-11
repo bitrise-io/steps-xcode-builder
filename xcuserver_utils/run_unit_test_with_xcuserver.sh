@@ -81,3 +81,14 @@ fi
 # tail -f "${buildlogpath}" | sed '/^XCODEBUILDUNITTESTFINISHED$/ q'
 # tail -f "${buildlogpath}" | tee >( grep -qx "XCODEBUILDUNITTESTFINISHED" )
 sed '/XCODEBUILDUNITTESTFINISHED:/q' <(tail -n 0 -f "${buildlogpath}")
+
+# determin success
+res_success_marker="XCODEBUILDUNITTESTFINISHED: ok"
+res_lin="$(grep -m1 "${res_success_marker}" "${buildlogpath}")"
+if [[ "${res_lin}" == "${res_success_marker}" ]]; then
+	echo " (i) SUCCESS"
+	exit 0
+fi
+
+echo " [!] FAILED"
+exit 1
