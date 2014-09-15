@@ -194,7 +194,7 @@ elif [ -n "$BITRISE_ACTION_UNITTEST" ]; then
   #
   # xcuserver based solution (works through SSH)
   #
-  KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}" KEYCHAIN_NAME="${BITRISE_KEYCHAIN}" PROVISIONING_PROFILE="${PROFILE_UUID}" CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" BUILD_PROJECTDIR="${BITRISE_SOURCE_DIR}" BUILD_PROJECTFILE="${projectfile}" BUILD_BUILDTOOL="${build_tool}" BUILD_SCHEME="${BITRISE_SCHEME}" BUILD_DEVICENAME="${unittest_simulator_name}" bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
+  KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}" KEYCHAIN_NAME="${BITRISE_KEYCHAIN}" PROVISIONING_PROFILE="${PROFILE_UUID}" CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" BUILD_PROJECTDIR="$(pwd)" BUILD_PROJECTFILE="${projectfile}" BUILD_BUILDTOOL="${build_tool}" BUILD_SCHEME="${BITRISE_SCHEME}" BUILD_DEVICENAME="${unittest_simulator_name}" bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
 elif [ -n "$BITRISE_ACTION_ANALYZE" ]; then
   $build_tool \
     $XCODE_PROJECT_ACTION "$projectfile" \
@@ -238,7 +238,7 @@ if [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
   if [[ "$XCODEBUILD_STATUS" == "succeeded" ]]; then
     # Export ipa
     echo "Generating signed IPA"
-    
+
     xcodebuild \
       -exportArchive \
       -exportFormat ipa \
@@ -263,7 +263,7 @@ if [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
     app_dsym_path=""
 
     IFS=$'\n'
-    for a_app_dsym in $(find "$archive_dsyms_folder" -type d -name "*.app.dSYM"); do 
+    for a_app_dsym in $(find "$archive_dsyms_folder" -type d -name "*.app.dSYM"); do
       echo " (i) .app.dSYM found: $a_app_dsym"
       app_dsym_count=$[app_dsym_count + 1]
       app_dsym_path="$a_app_dsym"
