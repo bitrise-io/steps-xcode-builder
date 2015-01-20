@@ -1,125 +1,215 @@
 #!/bin/bash
 
 THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# load bash utils
+source "${THIS_SCRIPTDIR}/bash_utils/utils.sh"
+source "${THIS_SCRIPTDIR}/bash_utils/formatted_output.sh"
 
-echo "$ cd $BITRISE_SOURCE_DIR"
-cd "$BITRISE_SOURCE_DIR"
+# init / cleanup the formatted output
+echo "" > "${formatted_output_file_path}"
 
-if [[ $BITRISE_PROJECT_PATH == *".xcodeproj" ]]; then
-  export XCODE_PROJECT_ACTION="-project"
-elif [[ $BITRISE_PROJECT_PATH == *".xcworkspace" ]]; then
-  export XCODE_PROJECT_ACTION="-workspace"
-else
-  echo "Failed to get valid project file: $BITRISE_PROJECT_PATH"
-  exit 1
-fi
 
-use_xcode_version="6"
-if [ -n "${XCODE_BUILDER_USE_XCODE_VERSION}" ]; then
-  use_xcode_version="${XCODE_BUILDER_USE_XCODE_VERSION}"
-fi
-echo " (i) Specified Xcode Version to use: ${XCODE_BUILDER_USE_XCODE_VERSION}"
-bash "${THIS_SCRIPT_DIR}/bitrise_utils/select_xcode_version.sh" "${use_xcode_version}"
-if [ $? -ne 0 ]; then
-  echo " [!] Failed to select the specified Xcode version!"
-  exit 1
-fi
-echo " (i) Using Xcode version:"
-xcodebuild -version
-
-projectdir="$(dirname "$BITRISE_PROJECT_PATH")"
-projectfile="$(basename "$BITRISE_PROJECT_PATH")"
-echo "$ cd $projectdir"
-cd "$projectdir"
-
-build_tool="$BITRISE_BUILD_TOOL"
-echo " [i] Specified Build Tool: $build_tool"
-if [ -z "$build_tool" ]; then
-  build_tool="xcodebuild"
-fi
-if [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
-  if [[ "$build_tool" != "xcodebuild" ]]; then
-    build_tool="xcodebuild"
-    echo " [!] Build Tool set to xcodebuild - for Archive action only xcodebuild is supported!"
-  fi
-fi
-echo " [i] Using build tool: $build_tool"
+# ------------------------------
+# --- Utils - CleanUp
 
 is_build_action_success=0
 function finalcleanup {
   echo "-> finalcleanup"
-  unset UUID
-  rm "$BITRISE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
-  bash "${THIS_SCRIPT_DIR}/keychain.sh" remove
+  fail_msg="$1"
 
-  # Remove downloaded files
-  rm $PROVISION_PATH
-  rm $CERTIFICATE_PATH
+  # unset UUID
+  # rm "${CONFIG_provisioning_profiles_dir}/${PROFILE_UUID}.mobileprovision"
+  # bash "${THIS_SCRIPT_DIR}/keychain.sh" remove
 
-  if [ $is_build_action_success -eq 1 ] ; then
+  # # Remove downloaded files
+  # rm ${PROVISION_PATH}
+  # rm ${CERTIFICATE_PATH}
+
+  if [ ${is_build_action_success} -eq 1 ] ; then
     # success
-    if [ -n "$BITRISE_ACTION_BUILD" ]; then
+    write_section_to_formatted_output "# Success"
+
+    if [[ "${XCODE_BUILDER_ACTION}" == "build" ]] ; then
       echo "export BITRISE_BUILD_STATUS=succeeded" >> ~/.bash_profile
-    elif [ -n "$BITRISE_ACTION_ANALYZE" ]; then
+    elif [[ "${XCODE_BUILDER_ACTION}" == "analyze" ]] ; then
       echo "export BITRISE_ANALYZE_STATUS=succeeded" >> ~/.bash_profile
-    elif [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
+    elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
       echo "export BITRISE_ARCHIVE_STATUS=succeeded" >> ~/.bash_profile
-    elif [ -n "$BITRISE_ACTION_UNITTEST" ]; then
+    elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
       echo "export BITRISE_UNITTEST_STATUS=succeeded" >> ~/.bash_profile
     fi
   else
     # failed
-    if [ -n "$BITRISE_ACTION_BUILD" ]; then
+    write_section_to_formatted_output "# Error"
+    if [ ! -z "${fail_msg}" ] ; then
+      write_section_to_formatted_output "**Error Description**: ${fail_msg}"
+    fi
+    write_section_to_formatted_output "*See the logs for more information*"
+
+    if [[ "${XCODE_BUILDER_ACTION}" == "build" ]] ; then
       echo "export BITRISE_BUILD_STATUS=failed" >> ~/.bash_profile
-    elif [ -n "$BITRISE_ACTION_ANALYZE" ]; then
+    elif [[ "${XCODE_BUILDER_ACTION}" == "analyze" ]] ; then
       echo "export BITRISE_ANALYZE_STATUS=failed" >> ~/.bash_profile
-    elif [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
+    elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
       echo "export BITRISE_ARCHIVE_STATUS=failed" >> ~/.bash_profile
-    elif [ -n "$BITRISE_ACTION_UNITTEST" ]; then
+    elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
       echo "export BITRISE_UNITTEST_STATUS=failed" >> ~/.bash_profile
     fi
   fi
 }
 
-echo "XCODE_PROJECT_ACTION: $XCODE_PROJECT_ACTION"
+
+# ------------------------------
+# --- Configs
+
+CONFIG_provisioning_profiles_dir="$HOME/Library/MobileDevice/Provisioning Profiles"
+CONFIG_tmp_profile_dir="$HOME/tmp_profiles"
+
+
+# ------------------------------
+# --- Inputs
+
+write_section_to_formatted_output "# Configuration"
+
+# Xcode Action - for backward compatibility
+if [ -n "$BITRISE_ACTION_BUILD" ]; then
+  XCODE_BUILDER_ACTION="build"
+elif [ -n "$BITRISE_ACTION_ANALYZE" ]; then
+  XCODE_BUILDER_ACTION="analyze"
+elif [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
+  XCODE_BUILDER_ACTION="archive"
+elif [ -n "$BITRISE_ACTION_UNITTEST" ]; then
+  XCODE_BUILDER_ACTION="unittest"
+fi
+echo_string_to_formatted_output "* Action: ${XCODE_BUILDER_ACTION}"
+
+# Project-or-Workspace
+if [[ "${XCODE_BUILDER_PROJECT_PATH}" == *".xcodeproj" ]]; then
+  export CONFIG_xcode_project_action="-project"
+elif [[ "${XCODE_BUILDER_PROJECT_PATH}" == *".xcworkspace" ]]; then
+  export CONFIG_xcode_project_action="-workspace"
+else
+  finalcleanup "Failed to get valid project file (invalid project file): ${XCODE_BUILDER_PROJECT_PATH}"
+  exit 1
+fi
+
+# Build Tool
+CONFIG_build_tool="${XCODE_BUILDER_BUILD_TOOL}"
+echo " [i] Specified Build Tool: ${CONFIG_build_tool}"
+if [ -z "${CONFIG_build_tool}" ]; then
+  CONFIG_build_tool="xcodebuild"
+fi
+if [[ "${XCODE_BUILDER_ACTION}" == "archive" || "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
+  if [[ "${CONFIG_build_tool}" != "xcodebuild" ]]; then
+    CONFIG_build_tool="xcodebuild"
+    echo " [!] Build Tool set to xcodebuild - for Archive and UnitTest actions only xcodebuild is supported!"
+  fi
+fi
+echo_string_to_formatted_output "* Build Tool: ${CONFIG_build_tool}"
+
+# Required inputs testing
+if [ -z "${XCODE_BUILDER_SCHEME}" ] ; then
+  finalcleanup "Missing required input: No Scheme defined."
+  exit 1
+else
+  echo_string_to_formatted_output "* Scheme: ${XCODE_BUILDER_SCHEME}"
+fi
+if [ -z "${XCODE_BUILDER_PROJECT_PATH}" ] ; then
+  finalcleanup "Missing required input: No Project-File-Path defined."
+  exit 1
+else
+  echo_string_to_formatted_output "* Project Path: ${XCODE_BUILDER_PROJECT_PATH}"
+if [ -z "${XCODE_BUILDER_CERTIFICATE_URL}" ] ; then
+  finalcleanup "Missing required input: No Certificate-URL defined."
+  exit 1
+fi
+if [ -z "${XCODE_BUILDER_CERTIFICATES_DIR}" ] ; then
+  finalcleanup "Missing required input: No Certificate-Directory-Path defined."
+  exit 1
+else
+  echo_string_to_formatted_output "* Certificated Dir Path: ${XCODE_BUILDER_CERTIFICATES_DIR}"
+fi
+if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
+  if [ -z "${XCODE_BUILDER_DEPLOY_DIR}" ] ; then
+    finalcleanup "Missing required input: No Deploy-Directory-Path defined."
+    exit 1
+  else
+    echo_string_to_formatted_output "* Deploy Dir Path: ${XCODE_BUILDER_DEPLOY_DIR}"
+  fi
+fi
+
+
+#
+# Xcode Version Selection
+if [ -n "${XCODE_BUILDER_USE_XCODE_VERSION}" ]; then
+  use_xcode_version="${XCODE_BUILDER_USE_XCODE_VERSION}"
+fi
+if [ -z "${use_xcode_version}" ] ; then
+  echo_string_to_formatted_output "* No Xcode Version specified - will use the default."
+else
+  echo_string_to_formatted_output "* Specified Xcode Version to use: ${use_xcode_version}"
+  bash "${THIS_SCRIPT_DIR}/bitrise_utils/select_xcode_version.sh" "${use_xcode_version}"
+  if [ $? -ne 0 ] ; then
+    finalcleanup "Failed to select the specified Xcode version!"
+    exit 1
+  fi
+fi
+echo " (i) Using Xcode version:"
+xcodebuild -version
+
+
+
+# ------------------------------
+# --- Main
 
 # Create directory structure
-bash "${THIS_SCRIPT_DIR}/create_directory_structure.sh"
+mkdir -p "${CONFIG_provisioning_profiles_dir}"
+mkdir -p "${CONFIG_tmp_profile_dir}"
+mkdir -p "${XCODE_BUILDER_CERTIFICATES_DIR}"
+mkdir -p "${XCODE_BUILDER_DEPLOY_DIR}"
 
-if [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
-  export ARCHIVE_PATH="$BITRISE_DEPLOY_DIR/$BITRISE_SCHEME.xcarchive"
+
+projectdir="$(dirname "${XCODE_BUILDER_PROJECT_PATH}")"
+projectfile="$(basename "${XCODE_BUILDER_PROJECT_PATH}")"
+echo "$ cd ${projectdir}"
+cd "${projectdir}"
+
+
+echo "CONFIG_xcode_project_action: ${CONFIG_xcode_project_action}"
+
+if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
+  export ARCHIVE_PATH="${XCODE_BUILDER_DEPLOY_DIR}/${XCODE_BUILDER_SCHEME}.xcarchive"
   echo " (i) ARCHIVE_PATH=$ARCHIVE_PATH"
-  export EXPORT_PATH="$BITRISE_DEPLOY_DIR/$BITRISE_SCHEME"
+  export EXPORT_PATH="${XCODE_BUILDER_DEPLOY_DIR}/${XCODE_BUILDER_SCHEME}"
   echo " (i) EXPORT_PATH=$EXPORT_PATH"
-  export DSYM_ZIP_PATH="$BITRISE_DEPLOY_DIR/$BITRISE_SCHEME.dSYM.zip"
+  export DSYM_ZIP_PATH="${XCODE_BUILDER_DEPLOY_DIR}/${XCODE_BUILDER_SCHEME}.dSYM.zip"
   echo " (i) DSYM_ZIP_PATH=$DSYM_ZIP_PATH"
 fi
 
-if [ -n "$BITRISE_ACTION_UNITTEST" ]; then
-  unittest_simulator_name="iPad"
-  if [ -n "$UNITTEST_PLATFORM_NAME" ]; then
-    unittest_simulator_name="$UNITTEST_PLATFORM_NAME"
+if [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
+  CONFIG_unittest_simulator_name="iPad"
+  if [ -n "$XCODE_BUILDER_UNITTEST_PLATFORM_NAME" ]; then
+    CONFIG_unittest_simulator_name="$XCODE_BUILDER_UNITTEST_PLATFORM_NAME"
   fi
-  unittest_device_destination="platform=iOS Simulator,name=$unittest_simulator_name"
-  echo " (i) UnitTest Device Destination: $unittest_device_destination"
+  CONFIG_unittest_device_destination="platform=iOS Simulator,name=${CONFIG_unittest_simulator_name}"
+  echo " (i) UnitTest Device Destination: ${CONFIG_unittest_device_destination}"
 fi
 
 # Get provisioning profile
 echo "---> Downloading Provision Profile..."
-export PROVISION_PATH="$BITRISE_PROFILE_DIR/profile.mobileprovision"
-curl -fso "$PROVISION_PATH" "$BITRISE_PROVISION_URL"
+export PROVISION_PATH="${CONFIG_tmp_profile_dir}/profile.mobileprovision"
+curl -fso "${PROVISION_PATH}" "${XCODE_BUILDER_PROVISION_URL}"
 prov_profile_curl_result=$?
 if [ $prov_profile_curl_result -ne 0 ]; then
   echo " (i) First download attempt failed - retry..."
   sleep 5
-  curl -fso "$PROVISION_PATH" "$BITRISE_PROVISION_URL"
+  curl -fso "${PROVISION_PATH}" "${XCODE_BUILDER_PROVISION_URL}"
   prov_profile_curl_result=$?
 fi
-echo "PROVISION_PATH: $PROVISION_PATH"
-echo " (i) curl download result: $prov_profile_curl_result"
-if [[ ! -f "$PROVISION_PATH" ]]; then
-  echo " [!] PROVISION_PATH: File not found!"
-  finalcleanup
+echo "PROVISION_PATH: ${PROVISION_PATH}"
+echo " (i) curl download result: ${prov_profile_curl_result}"
+if [[ ! -f "${PROVISION_PATH}" ]] ; then
+  finalcleanup "PROVISION_PATH: File not found - failed to download"
   exit 1
 else
   echo " -> PROVISION_PATH: OK"
@@ -127,7 +217,7 @@ fi
 
 # Get certificate
 echo "---> Downloading Certificate..."
-export CERTIFICATE_PATH="$BITRISE_PROFILE_DIR/Certificate.p12"
+export CERTIFICATE_PATH="${XCODE_BUILDER_CERTIFICATES_DIR}/Certificate.p12"
 curl -fso "$CERTIFICATE_PATH" "$BITRISE_CERTIFICATE_URL"
 cert_curl_result=$?
 if [ $cert_curl_result -ne 0 ]; then
@@ -139,8 +229,7 @@ fi
 echo "CERTIFICATE_PATH: $CERTIFICATE_PATH"
 echo " (i) curl download result: $cert_curl_result"
 if [[ ! -f "$CERTIFICATE_PATH" ]]; then
-  echo " [!] CERTIFICATE_PATH: File not found!"
-  finalcleanup
+  finalcleanup "CERTIFICATE_PATH: File not found - failed to download"
   exit 1
 else
   echo " -> CERTIFICATE_PATH: OK"
@@ -154,11 +243,11 @@ bash "${THIS_SCRIPT_DIR}/keychain.sh" add
 
 # Get UUID & install provision profile
 export PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i "$PROVISION_PATH"))
-cp "$PROVISION_PATH" "$BITRISE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision"
+provisioning_profile_file_path="$CONFIG_provisioning_profiles_dir/$PROFILE_UUID.mobileprovision"
+cp "$PROVISION_PATH" "${provisioning_profile_file_path}"
 
-if [[ ! -f "$BITRISE_LIBRARY_DIR/$PROFILE_UUID.mobileprovision" ]]; then
-  echo " [!] Mobileprovision file: File not found - probably copy failed!"
-  finalcleanup
+if [[ ! -f "${provisioning_profile_file_path}" ]] ; then
+  finalcleanup "Mobileprovision File not found at path: ${provisioning_profile_file_path}"
   exit 1
 fi
 echo "PROFILE_UUID: $PROFILE_UUID"
@@ -168,24 +257,24 @@ export CERTIFICATE_IDENTITY=$(security find-certificate -a $BITRISE_KEYCHAIN | g
 echo "CERTIFICATE_IDENTITY: $CERTIFICATE_IDENTITY"
 
 # Start the build
-if [ -n "$BITRISE_ACTION_BUILD" ]; then
-  $build_tool \
-    $XCODE_PROJECT_ACTION "$projectfile" \
-    -scheme "$BITRISE_SCHEME" \
+if [[ "${XCODE_BUILDER_ACTION}" == "build" ]] ; then
+  ${CONFIG_build_tool} \
+    $CONFIG_xcode_project_action "$projectfile" \
+    -scheme "${XCODE_BUILDER_SCHEME}" \
     clean build \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
-elif [ -n "$BITRISE_ACTION_UNITTEST" ]; then
+elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   #
-  # OLD METHOD (doesn't work well if it runs through SSH)
+  # OLD METHOD (doesn't work if it runs through SSH)
   #
 
-  # $build_tool \
-  #   $XCODE_PROJECT_ACTION "$projectfile" \
-  #   -scheme "$BITRISE_SCHEME" \
+  # ${CONFIG_build_tool} \
+  #   $CONFIG_xcode_project_action "$projectfile" \
+  #   -scheme "${XCODE_BUILDER_SCHEME}" \
   #   clean test \
-  #   -destination "$unittest_device_destination" \
+  #   -destination "${CONFIG_unittest_device_destination}" \
   #   -sdk iphonesimulator \
   #   CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
   #   PROVISIONING_PROFILE="$PROFILE_UUID" \
@@ -194,19 +283,19 @@ elif [ -n "$BITRISE_ACTION_UNITTEST" ]; then
   #
   # xcuserver based solution (works through SSH)
   #
-  KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}" KEYCHAIN_NAME="${BITRISE_KEYCHAIN}" PROVISIONING_PROFILE="${PROFILE_UUID}" CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" BUILD_PROJECTDIR="$(pwd)" BUILD_PROJECTFILE="${projectfile}" BUILD_BUILDTOOL="${build_tool}" BUILD_SCHEME="${BITRISE_SCHEME}" BUILD_DEVICENAME="${unittest_simulator_name}" bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
-elif [ -n "$BITRISE_ACTION_ANALYZE" ]; then
-  $build_tool \
-    $XCODE_PROJECT_ACTION "$projectfile" \
-    -scheme "$BITRISE_SCHEME" \
+  KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}" KEYCHAIN_NAME="${BITRISE_KEYCHAIN}" PROVISIONING_PROFILE="${PROFILE_UUID}" CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" BUILD_PROJECTDIR="$(pwd)" BUILD_PROJECTFILE="${projectfile}" BUILD_BUILDTOOL="${CONFIG_build_tool}" BUILD_SCHEME="${{XCODE_BUILDER_SCHEME}}" BUILD_DEVICENAME="${CONFIG_unittest_simulator_name}" bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
+elif [[ "${XCODE_BUILDER_ACTION}" == "analyze" ]] ; then
+  ${CONFIG_build_tool} \
+    $CONFIG_xcode_project_action "$projectfile" \
+    -scheme "${XCODE_BUILDER_SCHEME}" \
     clean analyze \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
-elif [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
-  $build_tool \
-    $XCODE_PROJECT_ACTION "$projectfile" \
-    -scheme "$BITRISE_SCHEME" \
+elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
+  ${CONFIG_build_tool} \
+    $CONFIG_xcode_project_action "$projectfile" \
+    -scheme "${XCODE_BUILDER_SCHEME}" \
     clean archive -archivePath "$ARCHIVE_PATH" \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
@@ -220,85 +309,88 @@ else
 fi
 echo "XCODEBUILD_STATUS: $XCODEBUILD_STATUS"
 
-if [[ -n "$BITRISE_ACTION_BUILD" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
-  is_build_action_success=1
-elif [[ -n "$BITRISE_ACTION_ANALYZE" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
-  is_build_action_success=1
-elif [[ -n "$BITRISE_ACTION_UNITTEST" && "$XCODEBUILD_STATUS" == "succeeded" ]]; then
-  is_build_action_success=1
-fi
-
-if [ "$XCODEBUILD_STATUS" != "succeeded" ]; then
-  finalcleanup
+if [[ "${XCODEBUILD_STATUS}" == "succeeded" ]] ; then
+  if [[ "${XCODE_BUILDER_ACTION}" == "build" || "${XCODE_BUILDER_ACTION}" == "analyze" || "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
+    # done
+    is_build_action_success=1
+    finalcleanup
+    exit 0
+  fi
+else
+  finalcleanup "Xcode '${XCODE_BUILDER_ACTION}' Action Failed"
   exit 1
 fi
 
+#
+# ARCHIVE
+
 # Export ipa if everyting succeeded
-if [ -n "$BITRISE_ACTION_ARCHIVE" ]; then
-  if [[ "$XCODEBUILD_STATUS" == "succeeded" ]]; then
+if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
+  if [[ "$XCODEBUILD_STATUS" == "succeeded" ]] ; then
     # Export ipa
-    echo "Generating signed IPA"
+    write_section_to_formatted_output "## Generating signed IPA"
 
     xcodebuild \
       -exportArchive \
       -exportFormat ipa \
-      -archivePath "$ARCHIVE_PATH" \
-      -exportPath "$EXPORT_PATH" \
+      -archivePath "${ARCHIVE_PATH}" \
+      -exportPath "${EXPORT_PATH}" \
       -exportWithOriginalSigningIdentity
-
-    if [[ $? != 0 ]]; then
-      ecode=$?
-      finalcleanup
-      exit $ecode
+    ecode=$?
+    
+    if [[ ${ecode} != 0 ]] ; then
+      echo " (!) Exit code was: ${ecode}"
+      finalcleanup "Xcode Export Archive action failed!"
+      exit ${ecode}
     else
-      echo " (i) Archive build success"
+      echo_string_to_formatted_output "* (i) Archive build success"
     fi
-    echo "export BITRISE_IPA_PATH='$EXPORT_PATH.ipa'" >> ~/.bash_profile
+    echo "export BITRISE_IPA_PATH='${EXPORT_PATH}.ipa'" >> ~/.bash_profile
+    echo_string_to_formatted_output "* (i) .IPA path: ${EXPORT_PATH}.ipa"
 
     # get the .app.dSYM folders from the dSYMs archive folder
     archive_dsyms_folder="${ARCHIVE_PATH}/dSYMs"
-    echo "$ ls $archive_dsyms_folder"
-    ls "$archive_dsyms_folder"
+    echo "$ ls ${archive_dsyms_folder}"
+    ls "${archive_dsyms_folder}"
     app_dsym_count=0
     app_dsym_path=""
 
     IFS=$'\n'
-    for a_app_dsym in $(find "$archive_dsyms_folder" -type d -name "*.app.dSYM"); do
-      echo " (i) .app.dSYM found: $a_app_dsym"
+    for a_app_dsym in $(find "${archive_dsyms_folder}" -type d -name "*.app.dSYM") ; do
+      echo " (i) .app.dSYM found: ${a_app_dsym}"
       app_dsym_count=$[app_dsym_count + 1]
-      app_dsym_path="$a_app_dsym"
+      app_dsym_path="${a_app_dsym}"
       echo " (i) app_dsym_count: $app_dsym_count"
     done
     unset IFS
 
-    echo " (i) Found dSYM count: $app_dsym_count"
-    if [ $app_dsym_count -eq 1 ]; then
-      echo " (i) dSYM found - OK -> $app_dsym_path"
+    echo " (i) Found dSYM count: ${app_dsym_count}"
+    if [ ${app_dsym_count} -eq 1 ] ; then
+      echo_string_to_formatted_output "* (i) dSYM found at: ${app_dsym_path}"
     else
-      echo " [!] More than one or no dSYM found!"
-      finalcleanup
+      finalcleanup "More than one or no dSYM found!"
       exit 1
     fi
 
     # Generate dSym zip
-    export DSYM_PATH="$app_dsym_path"
-    if [ -d "$DSYM_PATH" ]; then
+    export DSYM_PATH="${app_dsym_path}"
+    if [ -d "${DSYM_PATH}" ]; then
       echo "Generating zip for dSym"
 
       /usr/bin/zip -rTy \
-        "$DSYM_ZIP_PATH" \
-        "$DSYM_PATH"
+        "${DSYM_ZIP_PATH}" \
+        "${DSYM_PATH}"
+      ecode=$?
 
-      if [[ $? != 0 ]]; then
-        ecode=$?
-        finalcleanup
-        exit $ecode
+      if [[ ${ecode} != 0 ]] ; then  
+        echo " (!) Exit code was: ${ecode}"
+        finalcleanup "Failed to create dSYM ZIP"
+        exit ${ecode}
       fi
-      echo "export BITRISE_DSYM_PATH='$DSYM_ZIP_PATH'" >> ~/.bash_profile
+      echo "export BITRISE_DSYM_PATH='${DSYM_ZIP_PATH}'" >> ~/.bash_profile
       is_build_action_success=1
     else
-      echo " [!] Error: No dSYM file found in ${DSYM_PATH}"
-      finalcleanup
+      finalcleanup "No dSYM file found in ${DSYM_PATH}"
       exit 1
     fi
   fi

@@ -1,67 +1,139 @@
-name: Xcode Build
+name: "Xcode Builder"
 description: |
   Performs Xcode build, test, analyze or archive action, based on it's input.
-
+website: https://github.com/bitrise-io/steps-xcode-builder
+fork_url: https://github.com/bitrise-io/steps-xcode-builder
+source:
+  git: https://github.com/bitrise-io/steps-xcode-builder.git
+host_os_tags:
+  - "osx-10.9"
+  - "osx-10.10"
+project_type_tags:
+  - "ios"
+type_tags:
+  - "xcode"
+  - "build"
+is_requires_admin_user: true
 inputs:
-  - title: |
-      Project file path (.xcodeproj or .xcworkspace), relative to the repository root.
-    mapped_to: BITRISE_PROJECT_PATH
-  - title: |
-      Scheme in the Project to build
-    mapped_to: BITRISE_SCHEME
-  - title: |
-      Action Build: set it to 'true' to perform Xcode 'build' action
-    mapped_to: BITRISE_ACTION_BUILD
-  - title: |
-      Action Analyze: set it to 'true' to perform Xcode 'analyze' action
-    mapped_to: BITRISE_ACTION_ANALYZE
-  - title: |
-      Action Archive: set it to 'true' to perform Xcode 'archive' action
-    mapped_to: BITRISE_ACTION_ARCHIVE
-  - title: |
-      Action UnitTest: set it to 'true' to perform Xcode 'test' action
-    mapped_to: BITRISE_ACTION_UNITTEST
-  - title: |
-      Certificate URL
-    mapped_to: BITRISE_CERTIFICATE_URL
-  - title: |
-      Certificate Passphrase
-    mapped_to: BITRISE_CERTIFICATE_PASSPHRASE
-  - title: |
-      Provisioning Profile URL
-    mapped_to: BITRISE_PROVISION_URL
-  - title: |
-      Build Tool: "xcodebuild" is the default; "xctool" is supported; BITRISE_ACTION_ARCHIVE and BITRISE_ACTION_UNITTEST can only use "xcodebuild"
-    mapped_to: BITRISE_BUILD_TOOL
-  - title: |
-      (Optional) Xcode Version to use. Default is "6".
+  - 
+    mapped_to: XCODE_BUILDER_PROJECT_PATH
+    title: "Project file path"
+    description: |
+      .xcodeproj or .xcworkspace file path, relative to the repository root.
+    is_required: true
+    is_expand: true
+  - 
+    mapped_to: XCODE_BUILDER_SCHEME
+    title: "Scheme"
+    description: |
+      Scheme name in the Project to build
+    is_required: true
+    is_expand: true
+  - 
+    mapped_to: XCODE_BUILDER_ACTION
+    title: "Xcode Action"
+    description: |
+      The action to perform with Xcode.
+    value_options:
+      - "build"
+      - "analyze"
+      - "archive"
+      - "unittest"
+    value: "build"
+    is_expand: false
+    is_required: true
+  - 
+    mapped_to: XCODE_BUILDER_CERTIFICATE_URL
+    title: "Certificate Private Key file URL"
+    description: |
+      .p12 Private Key file's URL
+    is_required: true
+    is_expand: true
+  - 
+    mapped_to: XCODE_BUILDER_CERTIFICATE_PASSPHRASE
+    title: "Certificate Private Key file Passphrase"
+    description: |
+      .p12 Private Key file's Passphrase
+    is_required: false
+    is_expand: true
+  - 
+    mapped_to: XCODE_BUILDER_PROVISION_URL
+    title: "Provisioning Profile URL"
+    is_required: false
+    is_expand: true
+  - 
+    mapped_to: XCODE_BUILDER_BUILD_TOOL
+    title: "Build Tool"
+    description: |
+      "xcodebuild" is the default; "xctool" is supported;
+
+      `XCODE_BUILDER_ACTION=archive` and `XCODE_BUILDER_ACTION=unittest` can only use *xcodebuild*
+    value_options: ["xcodebuild", "xctool"]
+    value: "xcodebuild"
+    is_expand: false
+    is_required: true
+  - 
     mapped_to: XCODE_BUILDER_USE_XCODE_VERSION
+    title: "Xcode Version to use (optional)"
+    description: |
+      **optional** input parameter.
+      
+      **Requires** Xcode versions to be stored in */Applications/Xcodes/* folder.
+    is_expand: false
+  -
+    mapped_to: XCODE_BUILDER_CERTIFICATES_DIR
+    title: "Certificates Directory Path"
+    description: |
+      Directory where this step stores the Build Certificate/Identity related
+      files, for example the Certificate Private Key (.p12).
+    value: "${HOME}/certificates"
+    is_expand: true
+    is_required: true
+# Archive specific inputs
+  -
+    mapped_to: XCODE_BUILDER_DEPLOY_DIR
+    title: "Deploy Directory Path"
+    description: |
+      Directory where the Xcode archive, .IPA and .dSYM will be stored.
+      
+      Used only if `XCODE_BUILDER_ACTION=archive`.
+    value: "${HOME}/deploy"
+    is_expand: true
+    is_required: true
 # UnitTest specific inputs
-  - title: |
-      [UNITTEST] Device to run the tests with, will be appended to the "platform=iOS Simulator,name=" `-destination` flag of the xcodebuild command. Default is "iPad". For other simulator devices set it as it is shown in Xcode's device selection dropdown UI.
-    mapped_to: UNITTEST_PLATFORM_NAME
+  - 
+    mapped_to: XCODE_BUILDER_UNITTEST_PLATFORM_NAME
+    title: "[UNITTEST] Device to run the tests with"
+    description: |
+      Will be appended to the "platform=iOS Simulator,name=" `-destination` flag
+      of the xcodebuild command.
+      Default is "iPad".
+      For other simulator devices set it as it is shown in
+      Xcode's device selection dropdown UI.
 
-
+      Used only if `XCODE_BUILDER_ACTION=unittest`.
+    value: "iPad"
+    is_expand: false
 outputs:
-# if BITRISE_ACTION_BUILD
-  - title: |
-      Build action result: 'succeeded' or 'failed'
+# if XCODE_BUILDER_ACTION_BUILD
+  -
     mapped_to: BITRISE_BUILD_STATUS
-# if BITRISE_ACTION_ANALYZE
-  - title: |
-      Analyze action result: 'succeeded' or 'failed'
+    title: "Build action result: 'succeeded' or 'failed'"
+# if XCODE_BUILDER_ACTION_ANALYZE
+  - 
     mapped_to: BITRISE_ANALYZE_STATUS
-# if BITRISE_ACTION_UNITTEST
-  - title: |
-      UnitTest action result: 'succeeded' or 'failed'
+    title: "Analyze action result: 'succeeded' or 'failed'"
+# if XCODE_BUILDER_ACTION_UNITTEST
+  - 
     mapped_to: BITRISE_UNITTEST_STATUS
-# if BITRISE_ACTION_ARCHIVE
-  - title: |
-      Archive action result: 'succeeded' or 'failed'
+    title: "UnitTest action result: 'succeeded' or 'failed'"
+# if XCODE_BUILDER_ACTION_ARCHIVE
+  - 
     mapped_to: BITRISE_ARCHIVE_STATUS
-  - title: |
-      Xcode archive IPA file path
+    title: "Archive action result: 'succeeded' or 'failed'"
+  - 
     mapped_to: BITRISE_IPA_PATH
-  - title: |
-      Xcode archive DSYM path
+    title: "Xcode archive IPA file path"
+  - 
     mapped_to: BITRISE_DSYM_PATH
+    title: "Xcode archive DSYM path"

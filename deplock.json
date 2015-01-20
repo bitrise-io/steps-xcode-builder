@@ -3,6 +3,10 @@
 		{
 			"url": "https://github.com/bitrise-io/bitrise-utils.git",
 			"revision": "88e565a3a7f3a7bd0c00b7acd89721385d46cc28"
+		},
+		{
+			"url": "https://github.com/bitrise-io/steps-utils-bash-toolkit.git",
+			"revision": "9ca2b4c4558d622a52b87a29815f1f3daa9b2339"
 		}
 	]
 }
