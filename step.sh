@@ -114,22 +114,33 @@ if [ -z "${XCODE_BUILDER_SCHEME}" ] ; then
 else
   echo_string_to_formatted_output "* Scheme: ${XCODE_BUILDER_SCHEME}"
 fi
+
+if [ -z "${XCODE_BUILDER_PROJECT_ROOT_DIR_PATH}" ] ; then
+  finalcleanup "Missing required input: No Project-Root-Dir-Path defined."
+  exit 1
+else
+  echo_string_to_formatted_output "* Project Root Dir Path: ${XCODE_BUILDER_PROJECT_ROOT_DIR_PATH}"
+fi
+
 if [ -z "${XCODE_BUILDER_PROJECT_PATH}" ] ; then
   finalcleanup "Missing required input: No Project-File-Path defined."
   exit 1
 else
   echo_string_to_formatted_output "* Project Path: ${XCODE_BUILDER_PROJECT_PATH}"
 fi
+
 if [ -z "${XCODE_BUILDER_CERTIFICATE_URL}" ] ; then
   finalcleanup "Missing required input: No Certificate-URL defined."
   exit 1
 fi
+
 if [ -z "${XCODE_BUILDER_CERTIFICATES_DIR}" ] ; then
   finalcleanup "Missing required input: No Certificate-Directory-Path defined."
   exit 1
 else
   echo_string_to_formatted_output "* Certificated Dir Path: ${XCODE_BUILDER_CERTIFICATES_DIR}"
 fi
+
 if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
   if [ -z "${XCODE_BUILDER_DEPLOY_DIR}" ] ; then
     finalcleanup "Missing required input: No Deploy-Directory-Path defined."
@@ -169,11 +180,21 @@ mkdir -p "${CONFIG_tmp_profile_dir}"
 mkdir -p "${XCODE_BUILDER_CERTIFICATES_DIR}"
 mkdir -p "${XCODE_BUILDER_DEPLOY_DIR}"
 
+echo "$ cd ${XCODE_BUILDER_PROJECT_ROOT_DIR_PATH}"
+cd "${XCODE_BUILDER_PROJECT_ROOT_DIR_PATH}"
+if [ $? -ne 0 ] ; then
+  finalcleanup "Failed to switch directory to the Project Root Directory"
+  exit 1
+fi
 
 projectdir="$(dirname "${XCODE_BUILDER_PROJECT_PATH}")"
 projectfile="$(basename "${XCODE_BUILDER_PROJECT_PATH}")"
 echo "$ cd ${projectdir}"
 cd "${projectdir}"
+if [ $? -ne 0 ] ; then
+  finalcleanup "Failed to switch to the Project-File's Directory"
+  exit 1
+fi
 
 
 echo "CONFIG_xcode_project_action: ${CONFIG_xcode_project_action}"

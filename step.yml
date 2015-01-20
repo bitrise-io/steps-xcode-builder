@@ -16,6 +16,17 @@ type_tags:
 is_requires_admin_user: true
 inputs:
   - 
+    mapped_to: XCODE_BUILDER_PROJECT_ROOT_DIR_PATH
+    title: "Project root directory path"
+    description: |
+      Root directory of your project, usually the root directory of
+      the project's local git folder.
+
+      The `XCODE_BUILDER_PROJECT_PATH` Project File path have to be
+      relative to this folder.
+    is_required: true
+    is_expand: true
+  - 
     mapped_to: XCODE_BUILDER_PROJECT_PATH
     title: "Project file path"
     description: |
@@ -77,7 +88,7 @@ inputs:
     title: "Xcode Version to use (optional)"
     description: |
       **optional** input parameter.
-      
+
       **Requires** Xcode versions to be stored in */Applications/Xcodes/* folder.
     is_expand: false
   -
