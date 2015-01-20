@@ -2,8 +2,8 @@
 
 THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # load bash utils
-source "${THIS_SCRIPTDIR}/bash_utils/utils.sh"
-source "${THIS_SCRIPTDIR}/bash_utils/formatted_output.sh"
+source "${THIS_SCRIPT_DIR}/bash_utils/utils.sh"
+source "${THIS_SCRIPT_DIR}/bash_utils/formatted_output.sh"
 
 # init / cleanup the formatted output
 echo "" > "${formatted_output_file_path}"
