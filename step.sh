@@ -119,6 +119,7 @@ if [ -z "${XCODE_BUILDER_PROJECT_PATH}" ] ; then
   exit 1
 else
   echo_string_to_formatted_output "* Project Path: ${XCODE_BUILDER_PROJECT_PATH}"
+fi
 if [ -z "${XCODE_BUILDER_CERTIFICATE_URL}" ] ; then
   finalcleanup "Missing required input: No Certificate-URL defined."
   exit 1
