@@ -302,8 +302,9 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
 fi
+build_res_code=$?
 
-if [ $? -eq 0 ]; then
+if [ ${build_res_code} -eq 0 ]; then
   export XCODEBUILD_STATUS="succeeded"
 else
   export XCODEBUILD_STATUS="failed"
