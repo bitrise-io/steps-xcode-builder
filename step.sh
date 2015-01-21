@@ -42,7 +42,9 @@ function finalcleanup {
     # failed
     write_section_to_formatted_output "# Error"
     if [ ! -z "${fail_msg}" ] ; then
-      write_section_to_formatted_output "**Error Description**:\n${fail_msg}"
+      err_desc="**Error Description**:
+      ${fail_msg}"
+      write_section_to_formatted_output "${err_desc}"
     fi
     write_section_to_formatted_output "*See the logs for more information*"
 
