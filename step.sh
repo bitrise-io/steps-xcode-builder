@@ -58,6 +58,11 @@ function finalcleanup {
   fi
 }
 
+function CLEANUP_ON_ERROR_FN {
+  finalcleanup
+}
+set_error_cleanup_function CLEANUP_ON_ERROR_FN
+
 
 # ------------------------------
 # --- Configs
@@ -92,6 +97,7 @@ else
   finalcleanup "Failed to get valid project file (invalid project file): ${XCODE_BUILDER_PROJECT_PATH}"
   exit 1
 fi
+echo "CONFIG_xcode_project_action: ${CONFIG_xcode_project_action}"
 
 # Build Tool
 CONFIG_build_tool="${XCODE_BUILDER_BUILD_TOOL}"
@@ -174,12 +180,13 @@ xcodebuild -version
 # ------------------------------
 # --- Main
 
-# Create directory structure
+# --- Create directory structure
 mkdir -p "${CONFIG_provisioning_profiles_dir}"
 mkdir -p "${CONFIG_tmp_profile_dir}"
 mkdir -p "${XCODE_BUILDER_CERTIFICATES_DIR}"
 mkdir -p "${XCODE_BUILDER_DEPLOY_DIR}"
 
+# --- Switch to project's dir
 echo "$ cd ${XCODE_BUILDER_PROJECT_ROOT_DIR_PATH}"
 cd "${XCODE_BUILDER_PROJECT_ROOT_DIR_PATH}"
 if [ $? -ne 0 ] ; then
@@ -197,7 +204,7 @@ if [ $? -ne 0 ] ; then
 fi
 
 
-echo "CONFIG_xcode_project_action: ${CONFIG_xcode_project_action}"
+
 
 if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
   export ARCHIVE_PATH="${XCODE_BUILDER_DEPLOY_DIR}/${XCODE_BUILDER_SCHEME}.xcarchive"
@@ -222,7 +229,7 @@ echo "---> Downloading Provision Profile..."
 export PROVISION_PATH="${CONFIG_tmp_profile_dir}/profile.mobileprovision"
 curl -fso "${PROVISION_PATH}" "${XCODE_BUILDER_PROVISION_URL}"
 prov_profile_curl_result=$?
-if [ $prov_profile_curl_result -ne 0 ]; then
+if [ ${prov_profile_curl_result} -ne 0 ]; then
   echo " (i) First download attempt failed - retry..."
   sleep 5
   curl -fso "${PROVISION_PATH}" "${XCODE_BUILDER_PROVISION_URL}"
@@ -240,16 +247,16 @@ fi
 # Get certificate
 echo "---> Downloading Certificate..."
 export CERTIFICATE_PATH="${XCODE_BUILDER_CERTIFICATES_DIR}/Certificate.p12"
-curl -fso "$CERTIFICATE_PATH" "$BITRISE_CERTIFICATE_URL"
+curl -fso "$CERTIFICATE_PATH" "${XCODE_BUILDER_CERTIFICATE_URL}"
 cert_curl_result=$?
-if [ $cert_curl_result -ne 0 ]; then
+if [ ${cert_curl_result} -ne 0 ]; then
   echo " (i) First download attempt failed - retry..."
   sleep 5
-  curl -fso "$CERTIFICATE_PATH" "$BITRISE_CERTIFICATE_URL"
+  curl -fso "$CERTIFICATE_PATH" "${XCODE_BUILDER_CERTIFICATE_URL}"
   cert_curl_result=$?
 fi
 echo "CERTIFICATE_PATH: $CERTIFICATE_PATH"
-echo " (i) curl download result: $cert_curl_result"
+echo " (i) curl download result: ${cert_curl_result}"
 if [[ ! -f "$CERTIFICATE_PATH" ]]; then
   finalcleanup "CERTIFICATE_PATH: File not found - failed to download"
   exit 1
@@ -275,32 +282,32 @@ fi
 echo "PROFILE_UUID: $PROFILE_UUID"
 
 # Get identities from certificate
-export CERTIFICATE_IDENTITY=$(security find-certificate -a $BITRISE_KEYCHAIN | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
+export CERTIFICATE_IDENTITY=$(security find-certificate -a ${BITRISE_KEYCHAIN} | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
 echo "CERTIFICATE_IDENTITY: $CERTIFICATE_IDENTITY"
 
 # Start the build
 if [[ "${XCODE_BUILDER_ACTION}" == "build" ]] ; then
-  ${CONFIG_build_tool} \
-    $CONFIG_xcode_project_action "$projectfile" \
+  print_and_do_command_exit_on_error ${CONFIG_build_tool} \
+    ${CONFIG_xcode_project_action} "$projectfile" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean build \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
-    OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
+    OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   #
   # OLD METHOD (doesn't work if it runs through SSH)
   #
 
   # ${CONFIG_build_tool} \
-  #   $CONFIG_xcode_project_action "$projectfile" \
+  #   ${CONFIG_xcode_project_action} "$projectfile" \
   #   -scheme "${XCODE_BUILDER_SCHEME}" \
   #   clean test \
   #   -destination "${CONFIG_unittest_device_destination}" \
   #   -sdk iphonesimulator \
   #   CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
   #   PROVISIONING_PROFILE="$PROFILE_UUID" \
-  #   OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
+  #   OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 
   #
   # xcuserver based solution (works through SSH)
@@ -308,20 +315,20 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}" KEYCHAIN_NAME="${BITRISE_KEYCHAIN}" PROVISIONING_PROFILE="${PROFILE_UUID}" CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" BUILD_PROJECTDIR="$(pwd)" BUILD_PROJECTFILE="${projectfile}" BUILD_BUILDTOOL="${CONFIG_build_tool}" BUILD_SCHEME="${{XCODE_BUILDER_SCHEME}}" BUILD_DEVICENAME="${CONFIG_unittest_simulator_name}" bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
 elif [[ "${XCODE_BUILDER_ACTION}" == "analyze" ]] ; then
   ${CONFIG_build_tool} \
-    $CONFIG_xcode_project_action "$projectfile" \
+    ${CONFIG_xcode_project_action} "$projectfile" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean analyze \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
-    OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
+    OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
   ${CONFIG_build_tool} \
-    $CONFIG_xcode_project_action "$projectfile" \
+    ${CONFIG_xcode_project_action} "$projectfile" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean archive -archivePath "$ARCHIVE_PATH" \
     CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
     PROVISIONING_PROFILE="$PROFILE_UUID" \
-    OTHER_CODE_SIGN_FLAGS="--keychain $BITRISE_KEYCHAIN"
+    OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 fi
 build_res_code=$?
 

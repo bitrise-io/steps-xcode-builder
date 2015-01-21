@@ -13,7 +13,7 @@
 #
 function print_and_do_command {
 	echo "-> $ $@"
-	$@
+	"$@"
 }
 
 
@@ -30,13 +30,28 @@ function print_and_do_command_string {
 }
 
 #
+# Sets a "cleanup" function which will be called
+#  from the print_and_do_command_exit_on_error() and fail_if_cmd_error()
+#  methods right before exit.
+function set_error_cleanup_function {
+	CLEANUP_ON_ERROR_FN=$1
+}
+
+#
 # Combination of print_and_do_command and error checking, exits if the command fails
 #  Example: print_and_do_command_exit_on_error rm some/file/path
 function print_and_do_command_exit_on_error {
-	print_and_do_command $@
-	if [ $? -ne 0 ]; then
+	print_and_do_command "$@"
+	cmd_exit_code=$?
+	if [ ${cmd_exit_code} -ne 0 ]; then
 		echo " [!] Failed!"
-		exit 1
+		if [ "$(type -t ${CLEANUP_ON_ERROR_FN})" == "function" ] ; then
+			echo " (i) Calling cleanup function before exit"
+			CLEANUP_ON_ERROR_FN
+		else
+			echo " (i) No cleanup function defined - exiting now"
+		fi
+		exit ${cmd_exit_code}
 	fi
 }
 
@@ -49,6 +64,12 @@ function fail_if_cmd_error {
 	err_msg=$1
 	if [ ${last_cmd_result} -ne 0 ]; then
 		echo "${err_msg}"
+		if [ "$(type -t ${CLEANUP_ON_ERROR_FN})" == "function" ] ; then
+			echo " (i) Calling cleanup function before exit"
+			CLEANUP_ON_ERROR_FN
+		else
+			echo " (i) No cleanup function defined - exiting now"
+		fi
 		exit ${last_cmd_result}
 	fi
 }
