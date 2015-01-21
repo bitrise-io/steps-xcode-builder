@@ -26,6 +26,7 @@ function print_and_do_command {
 #  of the precedence order of the '>' operator
 #
 function print_and_do_command_string {
+	echo # empty line
 	echo "-> $ $1"
 	eval "$1"
 }
@@ -64,10 +65,11 @@ function fail_if_cmd_error {
 	last_cmd_result=$?
 	err_msg=$1
 	if [ ${last_cmd_result} -ne 0 ]; then
-		echo "${err_msg}"
+		echo " [!] Error description: ${err_msg}"
+		echo "     (i) Exit code was: ${last_cmd_result}"
 		if [ "$(type -t ${CLEANUP_ON_ERROR_FN})" == "function" ] ; then
 			echo " (i) Calling cleanup function before exit"
-			CLEANUP_ON_ERROR_FN
+			CLEANUP_ON_ERROR_FN "${err_msg}"
 		else
 			echo " (i) No cleanup function defined - exiting now"
 		fi

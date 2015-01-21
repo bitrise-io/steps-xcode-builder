@@ -19,6 +19,8 @@ function finalcleanup {
 
   # unset UUID
   # rm "${CONFIG_provisioning_profiles_dir}/${PROFILE_UUID}.mobileprovision"
+  # Keychain have to be removed - it's password protected
+  #  and the password is only available in this step!
   bash "${THIS_SCRIPT_DIR}/keychain.sh" remove
 
   # # Remove downloaded files
@@ -60,7 +62,8 @@ function finalcleanup {
 }
 
 function CLEANUP_ON_ERROR_FN {
-  finalcleanup
+  err_msg="$1"
+  finalcleanup "${err_msg}"
 }
 set_error_cleanup_function CLEANUP_ON_ERROR_FN
 
@@ -167,14 +170,11 @@ if [ -z "${use_xcode_version}" ] ; then
   echo_string_to_formatted_output "* No Xcode Version specified - will use the default."
 else
   echo_string_to_formatted_output "* Specified Xcode Version to use: ${use_xcode_version}"
-  bash "${THIS_SCRIPT_DIR}/bitrise_utils/select_xcode_version.sh" "${use_xcode_version}"
-  if [ $? -ne 0 ] ; then
-    finalcleanup "Failed to select the specified Xcode version!"
-    exit 1
-  fi
+  print_and_do_command bash "${THIS_SCRIPT_DIR}/bitrise_utils/select_xcode_version.sh" "${use_xcode_version}"
+  fail_if_cmd_error "Failed to select the specified Xcode version!"
 fi
 echo " (i) Using Xcode version:"
-xcodebuild -version
+print_and_do_command_exit_on_error xcodebuild -version
 
 
 
@@ -182,27 +182,21 @@ xcodebuild -version
 # --- Main
 
 # --- Create directory structure
-mkdir -p "${CONFIG_provisioning_profiles_dir}"
-mkdir -p "${CONFIG_tmp_profile_dir}"
-mkdir -p "${XCODE_BUILDER_CERTIFICATES_DIR}"
-mkdir -p "${XCODE_BUILDER_DEPLOY_DIR}"
+print_and_do_command_exit_on_error mkdir -p "${CONFIG_provisioning_profiles_dir}"
+print_and_do_command_exit_on_error mkdir -p "${CONFIG_tmp_profile_dir}"
+print_and_do_command_exit_on_error mkdir -p "${XCODE_BUILDER_CERTIFICATES_DIR}"
+print_and_do_command_exit_on_error mkdir -p "${XCODE_BUILDER_DEPLOY_DIR}"
 
 # --- Switch to project's dir
-echo "$ cd ${XCODE_BUILDER_PROJECT_ROOT_DIR_PATH}"
-cd "${XCODE_BUILDER_PROJECT_ROOT_DIR_PATH}"
-if [ $? -ne 0 ] ; then
-  finalcleanup "Failed to switch directory to the Project Root Directory"
-  exit 1
-fi
+print_and_do_command cd "${XCODE_BUILDER_PROJECT_ROOT_DIR_PATH}"
+fail_if_cmd_error "Failed to switch directory to the Project Root Directory"
+
 
 projectdir="$(dirname "${XCODE_BUILDER_PROJECT_PATH}")"
 projectfile="$(basename "${XCODE_BUILDER_PROJECT_PATH}")"
-echo "$ cd ${projectdir}"
-cd "${projectdir}"
-if [ $? -ne 0 ] ; then
-  finalcleanup "Failed to switch to the Project-File's Directory"
-  exit 1
-fi
+#
+print_and_do_command cd "${projectdir}"
+fail_if_cmd_error "Failed to switch to the Project-File's Directory"
 
 
 
@@ -268,19 +262,18 @@ fi
 # LC_ALL: required for tr, for more info: http://unix.stackexchange.com/questions/45404/why-cant-tr-read-from-dev-urandom-on-osx
 keychain_pass="$(cat /dev/urandom | LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
 export KEYCHAIN_PASSPHRASE="${keychain_pass}"
-echo "$ keychain.sh add"
-bash "${THIS_SCRIPT_DIR}/keychain.sh" add
+print_and_do_command_exit_on_error bash "${THIS_SCRIPT_DIR}/keychain.sh" add
 
 # Get UUID & install provision profile
 export PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i "$PROVISION_PATH"))
-provisioning_profile_file_path="$CONFIG_provisioning_profiles_dir/$PROFILE_UUID.mobileprovision"
-cp "$PROVISION_PATH" "${provisioning_profile_file_path}"
+provisioning_profile_file_path="${CONFIG_provisioning_profiles_dir}/${PROFILE_UUID}.mobileprovision"
+print_and_do_command_exit_on_error cp "${PROVISION_PATH}" "${provisioning_profile_file_path}"
 
 if [[ ! -f "${provisioning_profile_file_path}" ]] ; then
   finalcleanup "Mobileprovision File not found at path: ${provisioning_profile_file_path}"
   exit 1
 fi
-echo "PROFILE_UUID: $PROFILE_UUID"
+echo "PROFILE_UUID: ${PROFILE_UUID}"
 
 # Get identities from certificate
 export CERTIFICATE_IDENTITY=$(security find-certificate -a ${BITRISE_KEYCHAIN} | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
@@ -289,11 +282,11 @@ echo "CERTIFICATE_IDENTITY: $CERTIFICATE_IDENTITY"
 # Start the build
 if [[ "${XCODE_BUILDER_ACTION}" == "build" ]] ; then
   print_and_do_command ${CONFIG_build_tool} \
-    ${CONFIG_xcode_project_action} "$projectfile" \
+    ${CONFIG_xcode_project_action} "${projectfile}" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean build \
-    CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
-    PROVISIONING_PROFILE="$PROFILE_UUID" \
+    CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
+    PROVISIONING_PROFILE="${PROFILE_UUID}" \
     OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   #
@@ -301,13 +294,13 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   #
 
   # ${CONFIG_build_tool} \
-  #   ${CONFIG_xcode_project_action} "$projectfile" \
+  #   ${CONFIG_xcode_project_action} "${projectfile}" \
   #   -scheme "${XCODE_BUILDER_SCHEME}" \
   #   clean test \
   #   -destination "${CONFIG_unittest_device_destination}" \
   #   -sdk iphonesimulator \
-  #   CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
-  #   PROVISIONING_PROFILE="$PROFILE_UUID" \
+  #   CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
+  #   PROVISIONING_PROFILE="${PROFILE_UUID}" \
   #   OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 
   #
@@ -325,19 +318,19 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   print_and_do_command bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
 elif [[ "${XCODE_BUILDER_ACTION}" == "analyze" ]] ; then
   print_and_do_command ${CONFIG_build_tool} \
-    ${CONFIG_xcode_project_action} "$projectfile" \
+    ${CONFIG_xcode_project_action} "${projectfile}" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean analyze \
-    CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
-    PROVISIONING_PROFILE="$PROFILE_UUID" \
+    CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
+    PROVISIONING_PROFILE="${PROFILE_UUID}" \
     OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
   print_and_do_command ${CONFIG_build_tool} \
-    ${CONFIG_xcode_project_action} "$projectfile" \
+    ${CONFIG_xcode_project_action} "${projectfile}" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
-    clean archive -archivePath "$ARCHIVE_PATH" \
-    CODE_SIGN_IDENTITY="$CERTIFICATE_IDENTITY" \
-    PROVISIONING_PROFILE="$PROFILE_UUID" \
+    clean archive -archivePath "${ARCHIVE_PATH}" \
+    CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
+    PROVISIONING_PROFILE="${PROFILE_UUID}" \
     OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 fi
 build_res_code=$?
@@ -362,7 +355,7 @@ else
 fi
 
 #
-# ARCHIVE
+# --- ARCHIVE specific
 
 # Export ipa if everyting succeeded
 if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
@@ -370,28 +363,21 @@ if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
     # Export ipa
     write_section_to_formatted_output "## Generating signed IPA"
 
-    xcodebuild \
+    print_and_do_command xcodebuild \
       -exportArchive \
       -exportFormat ipa \
       -archivePath "${ARCHIVE_PATH}" \
       -exportPath "${EXPORT_PATH}" \
       -exportWithOriginalSigningIdentity
-    ecode=$?
+    fail_if_cmd_error "Xcode Export Archive action failed!"
     
-    if [[ ${ecode} != 0 ]] ; then
-      echo " (!) Exit code was: ${ecode}"
-      finalcleanup "Xcode Export Archive action failed!"
-      exit ${ecode}
-    else
-      echo_string_to_formatted_output "* (i) Archive build success"
-    fi
+    echo_string_to_formatted_output "* (i) Archive build success"
     echo "export BITRISE_IPA_PATH='${EXPORT_PATH}.ipa'" >> ~/.bash_profile
     echo_string_to_formatted_output "* (i) .IPA path: ${EXPORT_PATH}.ipa"
 
     # get the .app.dSYM folders from the dSYMs archive folder
     archive_dsyms_folder="${ARCHIVE_PATH}/dSYMs"
-    echo "$ ls ${archive_dsyms_folder}"
-    ls "${archive_dsyms_folder}"
+    print_and_do_command ls "${archive_dsyms_folder}"
     app_dsym_count=0
     app_dsym_path=""
 
@@ -417,16 +403,11 @@ if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
     if [ -d "${DSYM_PATH}" ]; then
       echo "Generating zip for dSym"
 
-      /usr/bin/zip -rTy \
+      print_and_do_command /usr/bin/zip -rTy \
         "${DSYM_ZIP_PATH}" \
         "${DSYM_PATH}"
-      ecode=$?
+      fail_if_cmd_error "Failed to create dSYM ZIP"
 
-      if [[ ${ecode} != 0 ]] ; then  
-        echo " (!) Exit code was: ${ecode}"
-        finalcleanup "Failed to create dSYM ZIP"
-        exit ${ecode}
-      fi
       echo "export BITRISE_DSYM_PATH='${DSYM_ZIP_PATH}'" >> ~/.bash_profile
       is_build_action_success=1
     else
