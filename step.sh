@@ -288,7 +288,7 @@ echo "CERTIFICATE_IDENTITY: $CERTIFICATE_IDENTITY"
 
 # Start the build
 if [[ "${XCODE_BUILDER_ACTION}" == "build" ]] ; then
-  print_and_do_command_exit_on_error ${CONFIG_build_tool} \
+  print_and_do_command ${CONFIG_build_tool} \
     ${CONFIG_xcode_project_action} "$projectfile" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean build \
@@ -322,9 +322,9 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   export BUILD_BUILDTOOL="${CONFIG_build_tool}"
   export BUILD_SCHEME="${XCODE_BUILDER_SCHEME}"
   export BUILD_DEVICENAME="${CONFIG_unittest_simulator_name}"
-  print_and_do_command_exit_on_error bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
+  print_and_do_command bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
 elif [[ "${XCODE_BUILDER_ACTION}" == "analyze" ]] ; then
-  ${CONFIG_build_tool} \
+  print_and_do_command ${CONFIG_build_tool} \
     ${CONFIG_xcode_project_action} "$projectfile" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean analyze \
@@ -332,7 +332,7 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "analyze" ]] ; then
     PROVISIONING_PROFILE="$PROFILE_UUID" \
     OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
-  ${CONFIG_build_tool} \
+  print_and_do_command ${CONFIG_build_tool} \
     ${CONFIG_xcode_project_action} "$projectfile" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean archive -archivePath "$ARCHIVE_PATH" \
