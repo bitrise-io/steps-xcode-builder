@@ -19,7 +19,7 @@ function finalcleanup {
 
   # unset UUID
   # rm "${CONFIG_provisioning_profiles_dir}/${PROFILE_UUID}.mobileprovision"
-  # bash "${THIS_SCRIPT_DIR}/keychain.sh" remove
+  bash "${THIS_SCRIPT_DIR}/keychain.sh" remove
 
   # # Remove downloaded files
   # rm ${PROVISION_PATH}
@@ -42,7 +42,7 @@ function finalcleanup {
     # failed
     write_section_to_formatted_output "# Error"
     if [ ! -z "${fail_msg}" ] ; then
-      write_section_to_formatted_output "**Error Description**: ${fail_msg}"
+      write_section_to_formatted_output "**Error Description**:\n${fail_msg}"
     fi
     write_section_to_formatted_output "*See the logs for more information*"
 
@@ -126,7 +126,7 @@ if [ -z "${XCODE_BUILDER_PROJECT_PATH}" ] ; then
   finalcleanup "Missing required input: No Project-File-Path defined."
   exit 1
 else
-  echo_string_to_formatted_output "* Project Path: ${XCODE_BUILDER_PROJECT_PATH}"
+  echo_string_to_formatted_output "* Project File Path (relative to Project Root Dir): ${XCODE_BUILDER_PROJECT_PATH}"
 fi
 
 if [ -z "${XCODE_BUILDER_CERTIFICATE_URL}" ] ; then
