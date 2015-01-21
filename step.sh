@@ -313,7 +313,16 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   #
   # xcuserver based solution (works through SSH)
   #
-  KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}" KEYCHAIN_NAME="${BITRISE_KEYCHAIN}" PROVISIONING_PROFILE="${PROFILE_UUID}" CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" BUILD_PROJECTDIR="$(pwd)" BUILD_PROJECTFILE="${projectfile}" BUILD_BUILDTOOL="${CONFIG_build_tool}" BUILD_SCHEME="${{XCODE_BUILDER_SCHEME}}" BUILD_DEVICENAME="${CONFIG_unittest_simulator_name}" bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
+  export KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}"
+  export KEYCHAIN_NAME="${BITRISE_KEYCHAIN}"
+  export PROVISIONING_PROFILE="${PROFILE_UUID}"
+  export CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}"
+  export BUILD_PROJECTDIR="$(pwd)"
+  export BUILD_PROJECTFILE="${projectfile}"
+  export BUILD_BUILDTOOL="${CONFIG_build_tool}"
+  export BUILD_SCHEME="${XCODE_BUILDER_SCHEME}"
+  export BUILD_DEVICENAME="${CONFIG_unittest_simulator_name}"
+  print_and_do_command_exit_on_error bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
 elif [[ "${XCODE_BUILDER_ACTION}" == "analyze" ]] ; then
   ${CONFIG_build_tool} \
     ${CONFIG_xcode_project_action} "$projectfile" \
