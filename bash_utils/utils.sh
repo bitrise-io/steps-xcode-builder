@@ -12,6 +12,7 @@
 #  Example: print_and_do_command echo 'hi'
 #
 function print_and_do_command {
+	echo # empty line
 	echo "-> $ $@"
 	"$@"
 }
