@@ -248,12 +248,12 @@ fi
 # --- Get certificate
 echo "---> Downloading Certificate..."
 export CERTIFICATE_PATH="${XCODE_BUILDER_CERTIFICATES_DIR}/Certificate.p12"
-print_and_do_command curl -fso "${CERTIFICATE_PATH}" "${XCODE_BUILDER_CERTIFICATE_URL}"
+print_and_do_command curl -Lfso "${CERTIFICATE_PATH}" "${XCODE_BUILDER_CERTIFICATE_URL}"
 cert_curl_result=$?
 if [ ${cert_curl_result} -ne 0 ]; then
   echo " (i) First download attempt failed - retry..."
   sleep 5
-  print_and_do_command_exit_on_error curl -fso "${CERTIFICATE_PATH}" "${XCODE_BUILDER_CERTIFICATE_URL}"
+  print_and_do_command_exit_on_error curl -Lfso "${CERTIFICATE_PATH}" "${XCODE_BUILDER_CERTIFICATE_URL}"
 fi
 echo "CERTIFICATE_PATH: ${CERTIFICATE_PATH}"
 if [[ ! -f "${CERTIFICATE_PATH}" ]]; then
@@ -285,12 +285,12 @@ do
 
   a_prov_profile_tmp_path="${CONFIG_tmp_profile_dir}/profile-${idx}.mobileprovision"
   echo " (i) a_prov_profile_tmp_path: ${a_prov_profile_tmp_path}"
-  print_and_do_command curl -fso "${a_prov_profile_tmp_path}" "${a_profile_url}"
+  print_and_do_command curl -Lfso "${a_prov_profile_tmp_path}" "${a_profile_url}"
   prov_profile_curl_result=$?
   if [ ${prov_profile_curl_result} -ne 0 ]; then
     echo " (i) First download attempt failed - retry..."
     sleep 5
-    print_and_do_command_exit_on_error curl -fso "${a_prov_profile_tmp_path}" "${a_profile_url}"
+    print_and_do_command_exit_on_error curl -Lfso "${a_prov_profile_tmp_path}" "${a_profile_url}"
   fi
   if [[ ! -f "${a_prov_profile_tmp_path}" ]] ; then
     finalcleanup "a_prov_profile_tmp_path: File not found - failed to download"
