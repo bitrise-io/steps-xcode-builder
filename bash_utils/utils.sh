@@ -49,7 +49,7 @@ _IS_CLEANUP_ALREADY_IN_PROGRESS=0
 #  Example: print_and_do_command_exit_on_error rm some/file/path
 function print_and_do_command_exit_on_error {
 	print_and_do_command "$@"
-	cmd_exit_code=$?
+	local cmd_exit_code=$?
 	if [ ${cmd_exit_code} -ne 0 ]; then
 		echo " [!] Failed!"
 		if [ ${_IS_CLEANUP_ALREADY_IN_PROGRESS} -eq 0 ] ; then
@@ -72,8 +72,8 @@ function print_and_do_command_exit_on_error {
 #  then print the given error message and exit with the command's exit code
 #
 function fail_if_cmd_error {
-	last_cmd_result=$?
-	err_msg=$1
+	local last_cmd_result=$?
+	local err_msg=$1
 	if [ ${last_cmd_result} -ne 0 ]; then
 		echo " [!] Error description: ${err_msg}"
 		echo "     (i) Exit code was: ${last_cmd_result}"

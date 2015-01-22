@@ -15,7 +15,7 @@ echo "" > "${formatted_output_file_path}"
 is_build_action_success=0
 function finalcleanup {
   echo "-> finalcleanup"
-  fail_msg="$1"
+  local fail_msg="$1"
 
   # unset UUID
   # rm "${CONFIG_provisioning_profiles_dir}/${PROFILE_UUID}.mobileprovision"
@@ -61,7 +61,7 @@ function finalcleanup {
 }
 
 function CLEANUP_ON_ERROR_FN {
-  err_msg="$1"
+  local err_msg="$1"
   finalcleanup "${err_msg}"
 }
 set_error_cleanup_function CLEANUP_ON_ERROR_FN
