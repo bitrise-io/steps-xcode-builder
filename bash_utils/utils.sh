@@ -35,9 +35,14 @@ function print_and_do_command_string {
 # Sets a "cleanup" function which will be called
 #  from the print_and_do_command_exit_on_error() and fail_if_cmd_error()
 #  methods right before exit.
+#
 function set_error_cleanup_function {
 	CLEANUP_ON_ERROR_FN=$1
 }
+# This variable is used to prevent infinite loop in case
+#  the cleanup function contains a '.._exit_on_error' function
+#  which would once again call the cleanup function!
+_IS_CLEANUP_ALREADY_IN_PROGRESS=0
 
 #
 # Combination of print_and_do_command and error checking, exits if the command fails
@@ -47,13 +52,18 @@ function print_and_do_command_exit_on_error {
 	cmd_exit_code=$?
 	if [ ${cmd_exit_code} -ne 0 ]; then
 		echo " [!] Failed!"
-		if [ "$(type -t ${CLEANUP_ON_ERROR_FN})" == "function" ] ; then
-			echo " (i) Calling cleanup function before exit"
-			CLEANUP_ON_ERROR_FN
-		else
-			echo " (i) No cleanup function defined - exiting now"
+		if [ _IS_CLEANUP_ALREADY_IN_PROGRESS -eq 0 ] ; then
+			_IS_CLEANUP_ALREADY_IN_PROGRESS=1
+			if [ "$(type -t ${CLEANUP_ON_ERROR_FN})" == "function" ] ; then
+				echo " (i) Calling cleanup function before exit"
+				CLEANUP_ON_ERROR_FN
+			else
+				echo " (i) No cleanup function defined - exiting now"
+			fi
+			exit ${cmd_exit_code}
 		fi
-		exit ${cmd_exit_code}
+		# else: another 'cleanup & exit' already in progress!
+		#  Don't do anything to prevent infinite-loop!
 	fi
 }
 
@@ -67,13 +77,18 @@ function fail_if_cmd_error {
 	if [ ${last_cmd_result} -ne 0 ]; then
 		echo " [!] Error description: ${err_msg}"
 		echo "     (i) Exit code was: ${last_cmd_result}"
-		if [ "$(type -t ${CLEANUP_ON_ERROR_FN})" == "function" ] ; then
-			echo " (i) Calling cleanup function before exit"
-			CLEANUP_ON_ERROR_FN "${err_msg}"
-		else
-			echo " (i) No cleanup function defined - exiting now"
+		if [ _IS_CLEANUP_ALREADY_IN_PROGRESS -eq 0 ] ; then
+			_IS_CLEANUP_ALREADY_IN_PROGRESS=1
+			if [ "$(type -t ${CLEANUP_ON_ERROR_FN})" == "function" ] ; then
+				echo " (i) Calling cleanup function before exit"
+				CLEANUP_ON_ERROR_FN "${err_msg}"
+			else
+				echo " (i) No cleanup function defined - exiting now"
+			fi
+			exit ${last_cmd_result}
 		fi
-		exit ${last_cmd_result}
+		# else: another 'cleanup & exit' already in progress!
+		#  Don't do anything to prevent infinite-loop!
 	fi
 }
 
