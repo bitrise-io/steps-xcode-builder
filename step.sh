@@ -254,7 +254,7 @@ IFS='|' read -a prov_profile_urls <<< "${XCODE_BUILDER_PROVISION_URL}"
 for idx in "${!prov_profile_urls[@]}"
 do
   a_profile_url="${prov_profile_urls[idx]}"
-  echo " -> Downloading Provision Profile (${idx}): ${a_profile_url}"
+  echo " -> Downloading Provisioning Profile (${idx}): ${a_profile_url}"
 
   a_prov_profile_tmp_path="${CONFIG_tmp_profile_dir}/profile-${idx}.mobileprovision"
   echo " (i) a_prov_profile_tmp_path: ${a_prov_profile_tmp_path}"
@@ -270,7 +270,7 @@ do
     exit 1
   fi
 
-  # Get UUID & install provision profile
+  # Get UUID & install provisioning profile
   a_profile_uuid=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i "${a_prov_profile_tmp_path}"))
   fail_if_cmd_error "Failed to get UUID from Provisioning Profile: ${a_prov_profile_tmp_path}"
   echo "a_profile_uuid: ${a_profile_uuid}"
@@ -330,6 +330,7 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
     OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 fi
 build_res_code=$?
+echo " (i) build_res_code: ${build_res_code}"
 
 if [ ${build_res_code} -eq 0 ]; then
   export XCODEBUILD_STATUS="succeeded"
