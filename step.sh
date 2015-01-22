@@ -21,7 +21,7 @@ function finalcleanup {
   # rm "${CONFIG_provisioning_profiles_dir}/${PROFILE_UUID}.mobileprovision"
   # Keychain have to be removed - it's password protected
   #  and the password is only available in this step!
-  bash "${THIS_SCRIPT_DIR}/keychain.sh" remove
+  keychain_fn "remove"
 
   # # Remove downloaded files
   # rm ${CERTIFICATE_PATH}
@@ -65,6 +65,32 @@ function CLEANUP_ON_ERROR_FN {
   finalcleanup "${err_msg}"
 }
 set_error_cleanup_function CLEANUP_ON_ERROR_FN
+
+
+# ------------------------------
+# --- Utils - Keychain
+
+function keychain_fn {
+  if [[ "$1" == "add" ]] ; then
+    # LC_ALL: required for tr, for more info: http://unix.stackexchange.com/questions/45404/why-cant-tr-read-from-dev-urandom-on-osx
+    # export KEYCHAIN_PASSPHRASE="$(cat /dev/urandom | LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
+
+    # Create the keychain
+    print_and_do_command_exit_on_error security -v create-keychain -p "${KEYCHAIN_PASSPHRASE}" "${BITRISE_KEYCHAIN}"
+
+    # Import to keychain
+    print_and_do_command_exit_on_error security -v import "${CERTIFICATE_PATH}" -k "${BITRISE_KEYCHAIN}" -P "${XCODE_BUILDER_CERTIFICATE_PASSPHRASE}" -A
+
+    # Unlock keychain
+    print_and_do_command_exit_on_error security -v set-keychain-settings -lut 72000 "${BITRISE_KEYCHAIN}"
+    print_and_do_command_exit_on_error security -v list-keychains -s "${BITRISE_KEYCHAIN}"
+    print_and_do_command_exit_on_error security -v list-keychains
+    print_and_do_command_exit_on_error security -v default-keychain -s "${BITRISE_KEYCHAIN}"
+    print_and_do_command_exit_on_error security -v unlock-keychain -p "${KEYCHAIN_PASSPHRASE}" "${BITRISE_KEYCHAIN}"
+  elif [[ "$1" == "remove" ]] ; then
+    print_and_do_command_exit_on_error security -v delete-keychain "${BITRISE_KEYCHAIN}"
+  fi
+}
 
 
 # ------------------------------
@@ -240,7 +266,7 @@ fi
 # LC_ALL: required for tr, for more info: http://unix.stackexchange.com/questions/45404/why-cant-tr-read-from-dev-urandom-on-osx
 keychain_pass="$(cat /dev/urandom | LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
 export KEYCHAIN_PASSPHRASE="${keychain_pass}"
-print_and_do_command_exit_on_error bash "${THIS_SCRIPT_DIR}/keychain.sh" add
+keychain_fn "add"
 
 
 # Get identities from certificate
@@ -272,7 +298,7 @@ do
 
   # Get UUID & install provisioning profile
   a_profile_uuid=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i "${a_prov_profile_tmp_path}"))
-  fail_if_cmd_error "Failed to get UUID from Provisioning Profile: ${a_prov_profile_tmp_path}"
+  fail_if_cmd_error "Failed to get UUID from Provisioning Profile: ${a_prov_profile_tmp_path} | Most likely the Certificate can't be used with this Provisioning Profile."
   echo "a_profile_uuid: ${a_profile_uuid}"
   a_provisioning_profile_file_path="${CONFIG_provisioning_profiles_dir}/${a_profile_uuid}.mobileprovision"
   print_and_do_command_exit_on_error mv "${a_prov_profile_tmp_path}" "${a_provisioning_profile_file_path}"
