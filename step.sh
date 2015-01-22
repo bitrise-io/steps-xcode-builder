@@ -248,7 +248,7 @@ fi
 # --- Get certificate
 echo "---> Downloading Certificate..."
 export CERTIFICATE_PATH="${XCODE_BUILDER_CERTIFICATES_DIR}/Certificate.p12"
-curl -fso "${CERTIFICATE_PATH}" "${XCODE_BUILDER_CERTIFICATE_URL}"
+print_and_do_command curl -fso "${CERTIFICATE_PATH}" "${XCODE_BUILDER_CERTIFICATE_URL}"
 cert_curl_result=$?
 if [ ${cert_curl_result} -ne 0 ]; then
   echo " (i) First download attempt failed - retry..."
@@ -285,7 +285,7 @@ do
 
   a_prov_profile_tmp_path="${CONFIG_tmp_profile_dir}/profile-${idx}.mobileprovision"
   echo " (i) a_prov_profile_tmp_path: ${a_prov_profile_tmp_path}"
-  curl -fso "${a_prov_profile_tmp_path}" "${a_profile_url}"
+  print_and_do_command curl -fso "${a_prov_profile_tmp_path}" "${a_profile_url}"
   prov_profile_curl_result=$?
   if [ ${prov_profile_curl_result} -ne 0 ]; then
     echo " (i) First download attempt failed - retry..."
