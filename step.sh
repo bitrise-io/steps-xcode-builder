@@ -173,7 +173,7 @@ if [ -z "${XCODE_BUILDER_CERTIFICATES_DIR}" ] ; then
   finalcleanup "Missing required input: No Certificate-Directory-Path defined."
   exit 1
 else
-  echo_string_to_formatted_output "* Certificated Dir Path: ${XCODE_BUILDER_CERTIFICATES_DIR}"
+  echo_string_to_formatted_output "* Certificate Dir Path: ${XCODE_BUILDER_CERTIFICATES_DIR}"
 fi
 
 if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
