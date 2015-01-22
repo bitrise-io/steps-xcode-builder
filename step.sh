@@ -277,6 +277,7 @@ echo "CERTIFICATE_IDENTITY: $CERTIFICATE_IDENTITY"
 # --- Get provisioning profile(s)
 echo "---> Provisioning Profile handling..."
 IFS='|' read -a prov_profile_urls <<< "${XCODE_BUILDER_PROVISION_URL}"
+echo " (i) Provided Provisioning Profile count: ${#prov_profile_urls[@]}"
 for idx in "${!prov_profile_urls[@]}"
 do
   a_profile_url="${prov_profile_urls[idx]}"
@@ -303,6 +304,7 @@ do
   a_provisioning_profile_file_path="${CONFIG_provisioning_profiles_dir}/${a_profile_uuid}.mobileprovision"
   print_and_do_command_exit_on_error mv "${a_prov_profile_tmp_path}" "${a_provisioning_profile_file_path}"
 done
+echo " (i) Available Provisioning Profiles:"
 print_and_do_command_exit_on_error ls "${CONFIG_provisioning_profiles_dir}"
 
 
