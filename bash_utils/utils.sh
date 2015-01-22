@@ -61,9 +61,11 @@ function print_and_do_command_exit_on_error {
 				echo " (i) No cleanup function defined - exiting now"
 			fi
 			exit ${cmd_exit_code}
+		else
+			# else: another 'cleanup & exit' already in progress!
+			#  Don't do anything to prevent infinite-loop!
+			echo " (i) Cleanup already in progress"
 		fi
-		# else: another 'cleanup & exit' already in progress!
-		#  Don't do anything to prevent infinite-loop!
 	fi
 }
 
@@ -86,9 +88,11 @@ function fail_if_cmd_error {
 				echo " (i) No cleanup function defined - exiting now"
 			fi
 			exit ${last_cmd_result}
+		else
+			# else: another 'cleanup & exit' already in progress!
+			#  Don't do anything to prevent infinite-loop!
+			echo " (i) Cleanup already in progress"
 		fi
-		# else: another 'cleanup & exit' already in progress!
-		#  Don't do anything to prevent infinite-loop!
 	fi
 }
 
