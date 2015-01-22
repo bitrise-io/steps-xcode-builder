@@ -24,7 +24,6 @@ function finalcleanup {
   bash "${THIS_SCRIPT_DIR}/keychain.sh" remove
 
   # # Remove downloaded files
-  # rm ${PROVISION_PATH}
   # rm ${CERTIFICATE_PATH}
 
   if [ ${is_build_action_success} -eq 1 ] ; then
@@ -71,8 +70,8 @@ set_error_cleanup_function CLEANUP_ON_ERROR_FN
 # ------------------------------
 # --- Configs
 
-CONFIG_provisioning_profiles_dir="$HOME/Library/MobileDevice/Provisioning Profiles"
-CONFIG_tmp_profile_dir="$HOME/tmp_profiles"
+CONFIG_provisioning_profiles_dir="${HOME}/Library/MobileDevice/Provisioning Profiles"
+CONFIG_tmp_profile_dir="${HOME}/tmp_profiles"
 
 
 # ------------------------------
@@ -219,40 +218,52 @@ if [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   echo " (i) UnitTest Device Destination: ${CONFIG_unittest_device_destination}"
 fi
 
-# Get provisioning profile
-echo "---> Downloading Provision Profile..."
-export PROVISION_PATH="${CONFIG_tmp_profile_dir}/profile.mobileprovision"
-curl -fso "${PROVISION_PATH}" "${XCODE_BUILDER_PROVISION_URL}"
-prov_profile_curl_result=$?
-if [ ${prov_profile_curl_result} -ne 0 ]; then
-  echo " (i) First download attempt failed - retry..."
-  sleep 5
-  curl -fso "${PROVISION_PATH}" "${XCODE_BUILDER_PROVISION_URL}"
+# Get provisioning profile(s)
+echo "---> Provisioning Profile handling..."
+IFS='|' read -a prov_profile_urls <<< "${XCODE_BUILDER_PROVISION_URL}"
+for idx in "${!prov_profile_urls[@]}"
+do
+  a_profile_url="${prov_profile_urls[idx]}"
+  echo " -> Downloading Provision Profile (${idx}): ${a_profile_url}"
+
+  a_prov_profile_tmp_path="${CONFIG_tmp_profile_dir}/profile-${idx}.mobileprovision"
+  echo " (i) a_prov_profile_tmp_path: ${a_prov_profile_tmp_path}"
+  curl -fso "${a_prov_profile_tmp_path}" "${a_profile_url}"
   prov_profile_curl_result=$?
-fi
-echo "PROVISION_PATH: ${PROVISION_PATH}"
-echo " (i) curl download result: ${prov_profile_curl_result}"
-if [[ ! -f "${PROVISION_PATH}" ]] ; then
-  finalcleanup "PROVISION_PATH: File not found - failed to download"
-  exit 1
-else
-  echo " -> PROVISION_PATH: OK"
-fi
+  if [ ${prov_profile_curl_result} -ne 0 ]; then
+    echo " (i) First download attempt failed - retry..."
+    sleep 5
+    print_and_do_command_exit_on_error curl -fso "${a_prov_profile_tmp_path}" "${a_profile_url}"
+  fi
+  if [[ ! -f "${a_prov_profile_tmp_path}" ]] ; then
+    finalcleanup "a_prov_profile_tmp_path: File not found - failed to download"
+    exit 1
+  fi
+
+  # Get UUID & install provision profile
+  a_profile_uuid=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i "${a_prov_profile_tmp_path}"))
+  fail_if_cmd_error "Failed to get UUID from Provisioningn Profile: ${a_prov_profile_tmp_path}"
+  echo "a_profile_uuid: ${a_profile_uuid}"
+  a_provisioning_profile_file_path="${CONFIG_provisioning_profiles_dir}/${a_profile_uuid}.mobileprovision"
+  print_and_do_command_exit_on_error mv "${a_prov_profile_tmp_path}" "${a_provisioning_profile_file_path}"
+done
+print_and_do_command_exit_on_error ls "${CONFIG_provisioning_profiles_dir}"
+
 
 # Get certificate
 echo "---> Downloading Certificate..."
 export CERTIFICATE_PATH="${XCODE_BUILDER_CERTIFICATES_DIR}/Certificate.p12"
-curl -fso "$CERTIFICATE_PATH" "${XCODE_BUILDER_CERTIFICATE_URL}"
+curl -fso "${CERTIFICATE_PATH}" "${XCODE_BUILDER_CERTIFICATE_URL}"
 cert_curl_result=$?
 if [ ${cert_curl_result} -ne 0 ]; then
   echo " (i) First download attempt failed - retry..."
   sleep 5
-  curl -fso "$CERTIFICATE_PATH" "${XCODE_BUILDER_CERTIFICATE_URL}"
+  curl -fso "${CERTIFICATE_PATH}" "${XCODE_BUILDER_CERTIFICATE_URL}"
   cert_curl_result=$?
 fi
-echo "CERTIFICATE_PATH: $CERTIFICATE_PATH"
+echo "CERTIFICATE_PATH: ${CERTIFICATE_PATH}"
 echo " (i) curl download result: ${cert_curl_result}"
-if [[ ! -f "$CERTIFICATE_PATH" ]]; then
+if [[ ! -f "${CERTIFICATE_PATH}" ]]; then
   finalcleanup "CERTIFICATE_PATH: File not found - failed to download"
   exit 1
 else
@@ -264,16 +275,6 @@ keychain_pass="$(cat /dev/urandom | LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w 32 | h
 export KEYCHAIN_PASSPHRASE="${keychain_pass}"
 print_and_do_command_exit_on_error bash "${THIS_SCRIPT_DIR}/keychain.sh" add
 
-# Get UUID & install provision profile
-export PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i "$PROVISION_PATH"))
-provisioning_profile_file_path="${CONFIG_provisioning_profiles_dir}/${PROFILE_UUID}.mobileprovision"
-print_and_do_command_exit_on_error cp "${PROVISION_PATH}" "${provisioning_profile_file_path}"
-
-if [[ ! -f "${provisioning_profile_file_path}" ]] ; then
-  finalcleanup "Mobileprovision File not found at path: ${provisioning_profile_file_path}"
-  exit 1
-fi
-echo "PROFILE_UUID: ${PROFILE_UUID}"
 
 # Get identities from certificate
 export CERTIFICATE_IDENTITY=$(security find-certificate -a ${BITRISE_KEYCHAIN} | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
