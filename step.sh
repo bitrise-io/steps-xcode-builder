@@ -300,7 +300,7 @@ do
   # Get UUID & install provisioning profile
   a_profile_uuid=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i "${a_prov_profile_tmp_path}"))
   fail_if_cmd_error "Failed to get UUID from Provisioning Profile: ${a_prov_profile_tmp_path} | Most likely the Certificate can't be used with this Provisioning Profile."
-  echo "a_profile_uuid: ${a_profile_uuid}"
+  echo " (i) a_profile_uuid: ${a_profile_uuid}"
   a_provisioning_profile_file_path="${CONFIG_provisioning_profiles_dir}/${a_profile_uuid}.mobileprovision"
   print_and_do_command_exit_on_error mv "${a_prov_profile_tmp_path}" "${a_provisioning_profile_file_path}"
 done
