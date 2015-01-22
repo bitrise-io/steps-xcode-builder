@@ -218,7 +218,37 @@ if [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   echo " (i) UnitTest Device Destination: ${CONFIG_unittest_device_destination}"
 fi
 
-# Get provisioning profile(s)
+
+# --- Get certificate
+echo "---> Downloading Certificate..."
+export CERTIFICATE_PATH="${XCODE_BUILDER_CERTIFICATES_DIR}/Certificate.p12"
+curl -fso "${CERTIFICATE_PATH}" "${XCODE_BUILDER_CERTIFICATE_URL}"
+cert_curl_result=$?
+if [ ${cert_curl_result} -ne 0 ]; then
+  echo " (i) First download attempt failed - retry..."
+  sleep 5
+  print_and_do_command_exit_on_error curl -fso "${CERTIFICATE_PATH}" "${XCODE_BUILDER_CERTIFICATE_URL}"
+fi
+echo "CERTIFICATE_PATH: ${CERTIFICATE_PATH}"
+if [[ ! -f "${CERTIFICATE_PATH}" ]]; then
+  finalcleanup "CERTIFICATE_PATH: File not found - failed to download"
+  exit 1
+else
+  echo " -> CERTIFICATE_PATH: OK"
+fi
+
+# LC_ALL: required for tr, for more info: http://unix.stackexchange.com/questions/45404/why-cant-tr-read-from-dev-urandom-on-osx
+keychain_pass="$(cat /dev/urandom | LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
+export KEYCHAIN_PASSPHRASE="${keychain_pass}"
+print_and_do_command_exit_on_error bash "${THIS_SCRIPT_DIR}/keychain.sh" add
+
+
+# Get identities from certificate
+export CERTIFICATE_IDENTITY=$(security find-certificate -a ${BITRISE_KEYCHAIN} | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
+echo "CERTIFICATE_IDENTITY: $CERTIFICATE_IDENTITY"
+
+
+# --- Get provisioning profile(s)
 echo "---> Provisioning Profile handling..."
 IFS='|' read -a prov_profile_urls <<< "${XCODE_BUILDER_PROVISION_URL}"
 for idx in "${!prov_profile_urls[@]}"
@@ -242,7 +272,7 @@ do
 
   # Get UUID & install provision profile
   a_profile_uuid=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i "${a_prov_profile_tmp_path}"))
-  fail_if_cmd_error "Failed to get UUID from Provisioningn Profile: ${a_prov_profile_tmp_path}"
+  fail_if_cmd_error "Failed to get UUID from Provisioning Profile: ${a_prov_profile_tmp_path}"
   echo "a_profile_uuid: ${a_profile_uuid}"
   a_provisioning_profile_file_path="${CONFIG_provisioning_profiles_dir}/${a_profile_uuid}.mobileprovision"
   print_and_do_command_exit_on_error mv "${a_prov_profile_tmp_path}" "${a_provisioning_profile_file_path}"
@@ -250,37 +280,7 @@ done
 print_and_do_command_exit_on_error ls "${CONFIG_provisioning_profiles_dir}"
 
 
-# Get certificate
-echo "---> Downloading Certificate..."
-export CERTIFICATE_PATH="${XCODE_BUILDER_CERTIFICATES_DIR}/Certificate.p12"
-curl -fso "${CERTIFICATE_PATH}" "${XCODE_BUILDER_CERTIFICATE_URL}"
-cert_curl_result=$?
-if [ ${cert_curl_result} -ne 0 ]; then
-  echo " (i) First download attempt failed - retry..."
-  sleep 5
-  curl -fso "${CERTIFICATE_PATH}" "${XCODE_BUILDER_CERTIFICATE_URL}"
-  cert_curl_result=$?
-fi
-echo "CERTIFICATE_PATH: ${CERTIFICATE_PATH}"
-echo " (i) curl download result: ${cert_curl_result}"
-if [[ ! -f "${CERTIFICATE_PATH}" ]]; then
-  finalcleanup "CERTIFICATE_PATH: File not found - failed to download"
-  exit 1
-else
-  echo " -> CERTIFICATE_PATH: OK"
-fi
-
-# LC_ALL: required for tr, for more info: http://unix.stackexchange.com/questions/45404/why-cant-tr-read-from-dev-urandom-on-osx
-keychain_pass="$(cat /dev/urandom | LC_ALL=C tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)"
-export KEYCHAIN_PASSPHRASE="${keychain_pass}"
-print_and_do_command_exit_on_error bash "${THIS_SCRIPT_DIR}/keychain.sh" add
-
-
-# Get identities from certificate
-export CERTIFICATE_IDENTITY=$(security find-certificate -a ${BITRISE_KEYCHAIN} | grep -Ei '"labl"<blob>=".*"' | grep -oEi '=".*"' | grep -oEi '[^="]+' | head -n 1)
-echo "CERTIFICATE_IDENTITY: $CERTIFICATE_IDENTITY"
-
-# Start the build
+# --- Start the build
 if [[ "${XCODE_BUILDER_ACTION}" == "build" ]] ; then
   print_and_do_command ${CONFIG_build_tool} \
     ${CONFIG_xcode_project_action} "${projectfile}" \
