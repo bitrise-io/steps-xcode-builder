@@ -286,7 +286,6 @@ if [[ "${XCODE_BUILDER_ACTION}" == "build" ]] ; then
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean build \
     CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
-    PROVISIONING_PROFILE="${PROFILE_UUID}" \
     OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   #
@@ -300,7 +299,6 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   #   -destination "${CONFIG_unittest_device_destination}" \
   #   -sdk iphonesimulator \
   #   CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
-  #   PROVISIONING_PROFILE="${PROFILE_UUID}" \
   #   OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 
   #
@@ -308,7 +306,6 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   #
   export KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}"
   export KEYCHAIN_NAME="${BITRISE_KEYCHAIN}"
-  export PROVISIONING_PROFILE="${PROFILE_UUID}"
   export CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}"
   export BUILD_PROJECTDIR="$(pwd)"
   export BUILD_PROJECTFILE="${projectfile}"
@@ -322,7 +319,6 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "analyze" ]] ; then
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean analyze \
     CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
-    PROVISIONING_PROFILE="${PROFILE_UUID}" \
     OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
   print_and_do_command ${CONFIG_build_tool} \
@@ -330,7 +326,6 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean archive -archivePath "${ARCHIVE_PATH}" \
     CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
-    PROVISIONING_PROFILE="${PROFILE_UUID}" \
     OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 fi
 build_res_code=$?
