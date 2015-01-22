@@ -318,7 +318,7 @@ print_and_do_command_exit_on_error ls -l "${CONFIG_provisioning_profiles_dir}"
 _build_prov_profile_param=""
 if [ ! -z "${force_use_prov_profile_UUID}" ] ; then
   # force use it (specify it as a build param)
-  _build_prov_profile_param="PROVISIONING_PROFILE='${force_use_prov_profile_UUID}'"
+  _build_prov_profile_param="PROVISIONING_PROFILE=${force_use_prov_profile_UUID}"
 fi
 
 if [[ "${XCODE_BUILDER_ACTION}" == "build" ]] ; then
