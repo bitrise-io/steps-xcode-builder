@@ -52,7 +52,7 @@ function print_and_do_command_exit_on_error {
 	cmd_exit_code=$?
 	if [ ${cmd_exit_code} -ne 0 ]; then
 		echo " [!] Failed!"
-		if [ _IS_CLEANUP_ALREADY_IN_PROGRESS -eq 0 ] ; then
+		if [ ${_IS_CLEANUP_ALREADY_IN_PROGRESS} -eq 0 ] ; then
 			_IS_CLEANUP_ALREADY_IN_PROGRESS=1
 			if [ "$(type -t ${CLEANUP_ON_ERROR_FN})" == "function" ] ; then
 				echo " (i) Calling cleanup function before exit"
@@ -77,7 +77,7 @@ function fail_if_cmd_error {
 	if [ ${last_cmd_result} -ne 0 ]; then
 		echo " [!] Error description: ${err_msg}"
 		echo "     (i) Exit code was: ${last_cmd_result}"
-		if [ _IS_CLEANUP_ALREADY_IN_PROGRESS -eq 0 ] ; then
+		if [ ${_IS_CLEANUP_ALREADY_IN_PROGRESS} -eq 0 ] ; then
 			_IS_CLEANUP_ALREADY_IN_PROGRESS=1
 			if [ "$(type -t ${CLEANUP_ON_ERROR_FN})" == "function" ] ; then
 				echo " (i) Calling cleanup function before exit"
