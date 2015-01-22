@@ -277,7 +277,8 @@ echo "CERTIFICATE_IDENTITY: $CERTIFICATE_IDENTITY"
 # --- Get provisioning profile(s)
 echo "---> Provisioning Profile handling..."
 IFS='|' read -a prov_profile_urls <<< "${XCODE_BUILDER_PROVISION_URL}"
-echo " (i) Provided Provisioning Profile count: ${#prov_profile_urls[@]}"
+prov_profile_count="${#prov_profile_urls[@]}"
+echo " (i) Provided Provisioning Profile count: ${prov_profile_count}"
 for idx in "${!prov_profile_urls[@]}"
 do
   a_profile_url="${prov_profile_urls[idx]}"
@@ -303,17 +304,29 @@ do
   echo " (i) a_profile_uuid: ${a_profile_uuid}"
   a_provisioning_profile_file_path="${CONFIG_provisioning_profiles_dir}/${a_profile_uuid}.mobileprovision"
   print_and_do_command_exit_on_error mv "${a_prov_profile_tmp_path}" "${a_provisioning_profile_file_path}"
+
+  if [[ "${prov_profile_count}" == "1" ]] ; then
+    # force use it (specify it as a build param)
+    force_use_prov_profile_UUID="${a_profile_uuid}"
+  fi
 done
 echo " (i) Available Provisioning Profiles:"
-print_and_do_command_exit_on_error ls "${CONFIG_provisioning_profiles_dir}"
+print_and_do_command_exit_on_error ls -l "${CONFIG_provisioning_profiles_dir}"
 
 
 # --- Start the build
+_build_prov_profile_param=""
+if [ ! -z "${force_use_prov_profile_UUID}" ] ; then
+  # force use it (specify it as a build param)
+  _build_prov_profile_param="PROVISIONING_PROFILE=\"${force_use_prov_profile_UUID}\""
+fi
+
 if [[ "${XCODE_BUILDER_ACTION}" == "build" ]] ; then
   print_and_do_command ${CONFIG_build_tool} \
     ${CONFIG_xcode_project_action} "${projectfile}" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean build \
+    ${_build_prov_profile_param} \
     CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
     OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
@@ -336,6 +349,9 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   export KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}"
   export KEYCHAIN_NAME="${BITRISE_KEYCHAIN}"
   export CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}"
+  if [ ! -z "${force_use_prov_profile_UUID}" ] ; then
+    export PROVISIONING_PROFILE="${PROFILE_UUID}"
+  fi
   export BUILD_PROJECTDIR="$(pwd)"
   export BUILD_PROJECTFILE="${projectfile}"
   export BUILD_BUILDTOOL="${CONFIG_build_tool}"
@@ -347,6 +363,7 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "analyze" ]] ; then
     ${CONFIG_xcode_project_action} "${projectfile}" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean analyze \
+    ${_build_prov_profile_param} \
     CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
     OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
@@ -354,6 +371,7 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
     ${CONFIG_xcode_project_action} "${projectfile}" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean archive -archivePath "${ARCHIVE_PATH}" \
+    ${_build_prov_profile_param} \
     CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
     OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 fi
