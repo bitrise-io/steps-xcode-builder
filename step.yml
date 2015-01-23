@@ -135,19 +135,19 @@ inputs:
     value: "iPad"
     is_expand: false
 outputs:
-# if XCODE_BUILDER_ACTION_BUILD
+# if XCODE_BUILDER_ACTION=build
   -
     mapped_to: BITRISE_BUILD_STATUS
     title: "Build action result: 'succeeded' or 'failed'"
-# if XCODE_BUILDER_ACTION_ANALYZE
+# if XCODE_BUILDER_ACTION=analyze
   - 
     mapped_to: BITRISE_ANALYZE_STATUS
     title: "Analyze action result: 'succeeded' or 'failed'"
-# if XCODE_BUILDER_ACTION_UNITTEST
+# if XCODE_BUILDER_ACTION=unittest
   - 
     mapped_to: BITRISE_UNITTEST_STATUS
     title: "UnitTest action result: 'succeeded' or 'failed'"
-# if XCODE_BUILDER_ACTION_ARCHIVE
+# if XCODE_BUILDER_ACTION=archive
   - 
     mapped_to: BITRISE_ARCHIVE_STATUS
     title: "Archive action result: 'succeeded' or 'failed'"
