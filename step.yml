@@ -70,6 +70,15 @@ inputs:
   - 
     mapped_to: XCODE_BUILDER_PROVISION_URL
     title: "Provisioning Profile URL"
+    description: |
+      Multiple URLs can be specified, separated by a pipe (**|**) character.
+
+      Example: `http://url1.com|http://url2.com`
+
+      If only a single Provisioning Profile is defined the profile's UUID
+      will be specified as a fix Xcode build parameter, forcing it
+      to use for the build in case other Provisioning Profiles
+      are also available on the build machine.
     is_required: false
     is_expand: true
   - 
