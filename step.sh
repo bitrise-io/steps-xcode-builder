@@ -210,7 +210,9 @@ print_and_do_command_exit_on_error xcodebuild -version
 print_and_do_command_exit_on_error mkdir -p "${CONFIG_provisioning_profiles_dir}"
 print_and_do_command_exit_on_error mkdir -p "${CONFIG_tmp_profile_dir}"
 print_and_do_command_exit_on_error mkdir -p "${XCODE_BUILDER_CERTIFICATES_DIR}"
-print_and_do_command_exit_on_error mkdir -p "${XCODE_BUILDER_DEPLOY_DIR}"
+if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
+  print_and_do_command_exit_on_error mkdir -p "${XCODE_BUILDER_DEPLOY_DIR}"
+fi
 
 # --- Switch to project's dir
 print_and_do_command cd "${XCODE_BUILDER_PROJECT_ROOT_DIR_PATH}"
