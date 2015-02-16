@@ -440,7 +440,7 @@ if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
       fi
     else
       if [ ${app_dsym_count} -eq 0 ] ; then
-        echo_string_to_formatted_output "* (i) *No dSYM found!*"
+        echo_string_to_formatted_output "* (i) **No dSYM found!** To generate debug symbols (dSYM) go to your Xcode Project's Settings - *Build Settings - Debug Information Format* and set it to *DWARF with dSYM File*."
       else
         echo_string_to_formatted_output "* (i) *More than one dSYM found!*"
       fi
