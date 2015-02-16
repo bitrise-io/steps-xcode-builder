@@ -464,6 +464,8 @@ if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
 
       echo "export BITRISE_DSYM_PATH='${DSYM_ZIP_PATH}'" >> ~/.bash_profile
       is_build_action_success=1
+    else
+      is_build_action_success=1
     fi
   fi
 fi
