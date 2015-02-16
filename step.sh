@@ -411,9 +411,9 @@ if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
       -exportWithOriginalSigningIdentity
     fail_if_cmd_error "Xcode Export Archive action failed!"
     
-    echo_string_to_formatted_output "* (i) Archive build success"
+    echo_string_to_formatted_output "* Archive build success"
     echo "export BITRISE_IPA_PATH='${EXPORT_PATH}.ipa'" >> ~/.bash_profile
-    echo_string_to_formatted_output "* (i) .IPA path: ${EXPORT_PATH}.ipa"
+    echo_string_to_formatted_output "* .IPA path: ${EXPORT_PATH}.ipa"
 
     # get the .app.dSYM folders from the dSYMs archive folder
     archive_dsyms_folder="${ARCHIVE_PATH}/dSYMs"
@@ -432,7 +432,7 @@ if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
 
     echo " (i) Found dSYM count: ${app_dsym_count}"
     if [ ${app_dsym_count} -eq 1 ] ; then
-      echo_string_to_formatted_output "* (i) dSYM found at: ${app_dsym_path}"
+      echo_string_to_formatted_output "* dSYM found at: ${app_dsym_path}"
       if [ -d "${app_dsym_path}" ] ; then
         export DSYM_PATH="${app_dsym_path}"
       else
