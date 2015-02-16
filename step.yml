@@ -156,4 +156,10 @@ outputs:
     title: "Xcode archive IPA file path"
   - 
     mapped_to: BITRISE_DSYM_PATH
-    title: "Xcode archive DSYM path"
+    title: "Xcode archive DSYM path - only if dSYM is available!"
+    description: |
+      By default Xcode generates the dSYM debug symbols
+      but this can be turned off in Xcode
+      at *Xcode - Project Settings - Build Settings - Debug Information Format*.
+      If this option is set to *DWARF* instead of the default *DWARF with dSYM File*
+      then no dSYM will be generated.

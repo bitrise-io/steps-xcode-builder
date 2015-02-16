@@ -433,26 +433,37 @@ if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
     echo " (i) Found dSYM count: ${app_dsym_count}"
     if [ ${app_dsym_count} -eq 1 ] ; then
       echo_string_to_formatted_output "* (i) dSYM found at: ${app_dsym_path}"
+      if [ -d "${app_dsym_path}" ] ; then
+        export DSYM_PATH="${app_dsym_path}"
+      else
+        echo_string_to_formatted_output "* (i) *Found dSYM path is not a directory!*"
+      fi
     else
-      finalcleanup "More than one or no dSYM found!"
-      exit 1
+      if [ ${app_dsym_count} -eq 0 ] ; then
+        echo_string_to_formatted_output "* (i) *No dSYM found!*"
+      else
+        echo_string_to_formatted_output "* (i) *More than one dSYM found!*"
+      fi
     fi
 
     # Generate dSym zip
-    export DSYM_PATH="${app_dsym_path}"
-    if [ -d "${DSYM_PATH}" ]; then
+    if [[ ! -z "${DSYM_PATH}" && -d "${DSYM_PATH}" ]] ; then
       echo "Generating zip for dSym"
 
-      print_and_do_command /usr/bin/zip -rTy \
-        "${DSYM_ZIP_PATH}" \
-        "${DSYM_PATH}"
+      (
+        dsym_parent_folder=$( dirname "${DSYM_PATH}" )
+        dsym_fold_name=$( basename "${DSYM_PATH}" )
+        # cd into dSYM parent to not to store full
+        #  paths in the ZIP
+        print_and_do_command_exit_on_error cd "${dsym_parent_folder}"
+        print_and_do_command_exit_on_error /usr/bin/zip -rTy \
+          "${DSYM_ZIP_PATH}" \
+          "${dsym_fold_name}"
+      )
       fail_if_cmd_error "Failed to create dSYM ZIP"
 
       echo "export BITRISE_DSYM_PATH='${DSYM_ZIP_PATH}'" >> ~/.bash_profile
       is_build_action_success=1
-    else
-      finalcleanup "No dSYM file found in ${DSYM_PATH}"
-      exit 1
     fi
   fi
 fi
