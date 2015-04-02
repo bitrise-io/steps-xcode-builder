@@ -403,12 +403,16 @@ if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
     # Export ipa
     write_section_to_formatted_output "## Generating signed IPA"
 
+    # Get the name of the profile
+    profile_name=`/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<< $(security cms -D -i ${ARCHIVE_PATH}/Products/Applications/*.app/embedded.mobileprovision)`
+    fail_if_cmd_error "Missing embedded mobileprovision in xcarchive"
+
     print_and_do_command xcodebuild \
       -exportArchive \
       -exportFormat ipa \
       -archivePath "${ARCHIVE_PATH}" \
       -exportPath "${EXPORT_PATH}" \
-      -exportWithOriginalSigningIdentity
+      -exportProvisioningProfile "${profile_name}"
     fail_if_cmd_error "Xcode Export Archive action failed!"
     
     echo_string_to_formatted_output "* Archive build success"
