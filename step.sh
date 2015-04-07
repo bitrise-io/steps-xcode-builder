@@ -407,6 +407,8 @@ if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
     profile_name=`/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<< $(security cms -D -i ${ARCHIVE_PATH}/Products/Applications/*.app/embedded.mobileprovision)`
     fail_if_cmd_error "Missing embedded mobileprovision in xcarchive"
 
+    echo " (i) Found Profile Name, for signing: ${profile_name}"
+
     print_and_do_command xcodebuild \
       -exportArchive \
       -exportFormat ipa \
