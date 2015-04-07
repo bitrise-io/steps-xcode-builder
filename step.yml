@@ -100,6 +100,8 @@ inputs:
 
       **Requires** Xcode versions to be stored in */Applications/Xcodes/* folder.
     is_expand: false
+    is_required: false
+    value: ""
   -
     mapped_to: XCODE_BUILDER_CERTIFICATES_DIR
     title: "Certificates Directory Path"
