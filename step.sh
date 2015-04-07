@@ -187,17 +187,7 @@ fi
 
 
 #
-# Xcode Version Selection
-if [ -n "${XCODE_BUILDER_USE_XCODE_VERSION}" ]; then
-  use_xcode_version="${XCODE_BUILDER_USE_XCODE_VERSION}"
-fi
-if [ -z "${use_xcode_version}" ] ; then
-  echo_string_to_formatted_output "* No Xcode Version specified - will use the default."
-else
-  echo_string_to_formatted_output "* Specified Xcode Version to use: ${use_xcode_version}"
-  print_and_do_command bash "${THIS_SCRIPT_DIR}/bitrise_utils/select_xcode_version.sh" "${use_xcode_version}"
-  fail_if_cmd_error "Failed to select the specified Xcode version!"
-fi
+# Xcode Version
 echo " (i) Using Xcode version:"
 print_and_do_command_exit_on_error xcodebuild -version
 

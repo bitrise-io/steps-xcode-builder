@@ -15,7 +15,7 @@ type_tags:
   - "build"
 is_requires_admin_user: true
 inputs:
-  - 
+  -
     mapped_to: XCODE_BUILDER_PROJECT_ROOT_DIR_PATH
     title: "Project root directory path"
     description: |
@@ -26,21 +26,21 @@ inputs:
       relative to this folder.
     is_required: true
     is_expand: true
-  - 
+  -
     mapped_to: XCODE_BUILDER_PROJECT_PATH
     title: "Project file path"
     description: |
       .xcodeproj or .xcworkspace file path, relative to the repository root.
     is_required: true
     is_expand: true
-  - 
+  -
     mapped_to: XCODE_BUILDER_SCHEME
     title: "Scheme"
     description: |
       Scheme name in the Project to build
     is_required: true
     is_expand: true
-  - 
+  -
     mapped_to: XCODE_BUILDER_ACTION
     title: "Xcode Action"
     description: |
@@ -53,21 +53,21 @@ inputs:
     value: "build"
     is_expand: false
     is_required: true
-  - 
+  -
     mapped_to: XCODE_BUILDER_CERTIFICATE_URL
     title: "Certificate Private Key file URL"
     description: |
       .p12 Private Key file's URL
     is_required: true
     is_expand: true
-  - 
+  -
     mapped_to: XCODE_BUILDER_CERTIFICATE_PASSPHRASE
     title: "Certificate Private Key file Passphrase"
     description: |
       .p12 Private Key file's Passphrase
     is_required: false
     is_expand: true
-  - 
+  -
     mapped_to: XCODE_BUILDER_PROVISION_URL
     title: "Provisioning Profile URL"
     description: |
@@ -81,7 +81,7 @@ inputs:
       are also available on the build machine.
     is_required: false
     is_expand: true
-  - 
+  -
     mapped_to: XCODE_BUILDER_BUILD_TOOL
     title: "Build Tool"
     description: |
@@ -92,16 +92,6 @@ inputs:
     value: "xcodebuild"
     is_expand: false
     is_required: true
-  - 
-    mapped_to: XCODE_BUILDER_USE_XCODE_VERSION
-    title: "Xcode Version to use (optional)"
-    description: |
-      **optional** input parameter.
-
-      **Requires** Xcode versions to be stored in */Applications/Xcodes/* folder.
-    is_expand: false
-    is_required: false
-    value: ""
   -
     mapped_to: XCODE_BUILDER_CERTIFICATES_DIR
     title: "Certificates Directory Path"
@@ -117,13 +107,13 @@ inputs:
     title: "Deploy Directory Path"
     description: |
       Directory where the Xcode archive, .IPA and .dSYM will be stored.
-      
+
       Used only if `XCODE_BUILDER_ACTION=archive`.
     value: "${HOME}/deploy"
     is_expand: true
     is_required: true
 # UnitTest specific inputs
-  - 
+  -
     mapped_to: XCODE_BUILDER_UNITTEST_PLATFORM_NAME
     title: "[UNITTEST] Device to run the tests with"
     description: |
@@ -142,21 +132,21 @@ outputs:
     mapped_to: BITRISE_BUILD_STATUS
     title: "Build action result: 'succeeded' or 'failed'"
 # if XCODE_BUILDER_ACTION=analyze
-  - 
+  -
     mapped_to: BITRISE_ANALYZE_STATUS
     title: "Analyze action result: 'succeeded' or 'failed'"
 # if XCODE_BUILDER_ACTION=unittest
-  - 
+  -
     mapped_to: BITRISE_UNITTEST_STATUS
     title: "UnitTest action result: 'succeeded' or 'failed'"
 # if XCODE_BUILDER_ACTION=archive
-  - 
+  -
     mapped_to: BITRISE_ARCHIVE_STATUS
     title: "Archive action result: 'succeeded' or 'failed'"
-  - 
+  -
     mapped_to: BITRISE_IPA_PATH
     title: "Xcode archive IPA file path"
-  - 
+  -
     mapped_to: BITRISE_DSYM_PATH
     title: "Xcode archive DSYM path - only if dSYM is available!"
     description: |
