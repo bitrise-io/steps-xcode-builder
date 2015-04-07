@@ -414,7 +414,7 @@ if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
       -exportPath "${EXPORT_PATH}" \
       -exportProvisioningProfile "${profile_name}"
     fail_if_cmd_error "Xcode Export Archive action failed!"
-    
+
     echo_string_to_formatted_output "* Archive build success"
     echo "export BITRISE_IPA_PATH='${EXPORT_PATH}.ipa'" >> ~/.bash_profile
     echo_string_to_formatted_output "* .IPA path: ${EXPORT_PATH}.ipa"
