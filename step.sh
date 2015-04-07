@@ -394,7 +394,23 @@ if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
     write_section_to_formatted_output "## Generating signed IPA"
 
     # Get the name of the profile
-    profile_name=`/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<< $(security cms -D -i "${ARCHIVE_PATH}/Products/Applications/*.app/embedded.mobileprovision")`
+    IFS=$'\n'
+    embedded_mobile_prov_path=""
+    for a_emb_path in $(find "${ARCHIVE_PATH}/Products/Applications" -type f -ipath '*.app/embedded.mobileprovision')
+    do
+    	echo " * embedded.mobileprovision: ${a_emb_path}"
+    	if [ ! -z "${embedded_mobile_prov_path}" ] ; then
+            finalcleanup "More than one \`embedded.mobileprovision\` found in \`${ARCHIVE_PATH}/Products/Applications/*.app\`"
+    		exit 1
+    	fi
+    	embedded_mobile_prov_path="${a_emb_path}"
+    done
+    unset IFS
+    if [ -z "${embedded_mobile_prov_path}" ] ; then
+        finalcleanup "No \`embedded.mobileprovision\` found in \`${ARCHIVE_PATH}/Products/Applications/*.app\`"
+        exit 1
+    fi
+    profile_name=`/usr/libexec/PlistBuddy -c 'Print :Name' /dev/stdin <<< $(security cms -D -i "${embedded_mobile_prov_path}")`
     fail_if_cmd_error "Missing embedded mobileprovision in xcarchive"
 
     echo " (i) Found Profile Name, for signing: ${profile_name}"
