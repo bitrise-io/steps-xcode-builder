@@ -321,6 +321,16 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   # OLD METHOD (doesn't work if it runs through SSH)
   #
 
+  print_and_do_command ${CONFIG_build_tool} \
+    ${CONFIG_xcode_project_action} "${projectfile}" \
+    -scheme "${XCODE_BUILDER_SCHEME}" \
+    clean test \
+    -destination "${CONFIG_unittest_device_destination}" \
+    -sdk iphonesimulator
+    # PROVISIONING_PROFILE="${xcode_build_param_prov_profile_UUID}" \
+    # CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
+    # OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
+
   # ${CONFIG_build_tool} \
   #   ${CONFIG_xcode_project_action} "${projectfile}" \
   #   -scheme "${XCODE_BUILDER_SCHEME}" \
@@ -330,21 +340,21 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   #   CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
   #   OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 
-  #
-  # xcuserver based solution (works through SSH)
-  #
-  export KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}"
-  export KEYCHAIN_NAME="${BITRISE_KEYCHAIN}"
-  export CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}"
-  if [ ! -z "${xcode_build_param_prov_profile_UUID}" ] ; then
-    export PROVISIONING_PROFILE="${xcode_build_param_prov_profile_UUID}"
-  fi
-  export BUILD_PROJECTDIR="$(pwd)"
-  export BUILD_PROJECTFILE="${projectfile}"
-  export BUILD_BUILDTOOL="${CONFIG_build_tool}"
-  export BUILD_SCHEME="${XCODE_BUILDER_SCHEME}"
-  export BUILD_DEVICENAME="${CONFIG_unittest_simulator_name}"
-  print_and_do_command bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
+  # #
+  # # xcuserver based solution (works through SSH)
+  # #
+  # export KEYCHAIN_PASSWORD="${KEYCHAIN_PASSPHRASE}"
+  # export KEYCHAIN_NAME="${BITRISE_KEYCHAIN}"
+  # export CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}"
+  # if [ ! -z "${xcode_build_param_prov_profile_UUID}" ] ; then
+  #   export PROVISIONING_PROFILE="${xcode_build_param_prov_profile_UUID}"
+  # fi
+  # export BUILD_PROJECTDIR="$(pwd)"
+  # export BUILD_PROJECTFILE="${projectfile}"
+  # export BUILD_BUILDTOOL="${CONFIG_build_tool}"
+  # export BUILD_SCHEME="${XCODE_BUILDER_SCHEME}"
+  # export BUILD_DEVICENAME="${CONFIG_unittest_simulator_name}"
+  # print_and_do_command bash "${THIS_SCRIPT_DIR}/xcuserver_utils/run_unit_test_with_xcuserver.sh"
 elif [[ "${XCODE_BUILDER_ACTION}" == "analyze" ]] ; then
   print_and_do_command ${CONFIG_build_tool} \
     ${CONFIG_xcode_project_action} "${projectfile}" \
