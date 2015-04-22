@@ -326,10 +326,10 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
     -scheme "${XCODE_BUILDER_SCHEME}" \
     clean test \
     -destination "${CONFIG_unittest_device_destination}" \
-    -sdk iphonesimulator
-    # PROVISIONING_PROFILE="${xcode_build_param_prov_profile_UUID}" \
-    # CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
-    # OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
+    -sdk iphonesimulator \
+    PROVISIONING_PROFILE="${xcode_build_param_prov_profile_UUID}" \
+    CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
+    OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
 
   # ${CONFIG_build_tool} \
   #   ${CONFIG_xcode_project_action} "${projectfile}" \
