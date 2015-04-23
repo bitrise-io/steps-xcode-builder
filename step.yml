@@ -123,6 +123,17 @@ inputs:
       For other simulator devices set it as it is shown in
       Xcode's device selection dropdown UI.
 
+      The OS version can be specified as well, separated from the device
+      with a comma. A couple of reference examples (you should check
+      the current names of the devices in your Xcode):
+
+      * iPhone Retina (4-inch)
+      * iPhone Retina (4-inch),OS=7.1
+      * iPhone Retina (4-inch 64-bit)
+      * iPad
+      * iPad,OS=7.1
+      * iPad Retina (64-bit)
+
       Used only if `XCODE_BUILDER_ACTION=unittest`.
     value: "iPad"
     is_expand: false
