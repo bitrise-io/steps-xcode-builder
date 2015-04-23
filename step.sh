@@ -335,7 +335,7 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   run_tests
   test_run_res=$?
   if [ ${test_run_res} -eq 65 ] ; then
-    echo " * First attempt failed with exit code 65, which might mean that the Simulator was not yet ready (Unable to run app in Simulator) - retrying..."
+    echo " * First attempt failed with exit code 65, which might mean that the Simulator was not yet ready (in this case you should see a 'Unable to run app in Simulator' error, printed by Xcode) - retrying..."
     run_tests
   fi
 
