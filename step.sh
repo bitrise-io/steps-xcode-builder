@@ -321,15 +321,23 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "unittest" ]] ; then
   # OLD METHOD (doesn't work if it runs through SSH)
   #
 
-  print_and_do_command ${CONFIG_build_tool} \
-    ${CONFIG_xcode_project_action} "${projectfile}" \
-    -scheme "${XCODE_BUILDER_SCHEME}" \
-    clean test \
-    -destination "${CONFIG_unittest_device_destination}" \
-    -sdk iphonesimulator \
-    PROVISIONING_PROFILE="${xcode_build_param_prov_profile_UUID}" \
-    CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
-    OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
+  function run_tests {
+    print_and_do_command ${CONFIG_build_tool} \
+      ${CONFIG_xcode_project_action} "${projectfile}" \
+      -scheme "${XCODE_BUILDER_SCHEME}" \
+      clean test \
+      -destination "${CONFIG_unittest_device_destination}" \
+      -sdk iphonesimulator \
+      PROVISIONING_PROFILE="${xcode_build_param_prov_profile_UUID}" \
+      CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
+      OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
+  }
+  run_tests
+  test_run_res=$?
+  if [ ${test_run_res} -eq 65 ] ; then
+    echo " * First attempt failed with exit code 65, which might mean that the Simulator was not yet ready (Unable to run app in Simulator) - retrying..."
+    run_tests
+  fi
 
   # ${CONFIG_build_tool} \
   #   ${CONFIG_xcode_project_action} "${projectfile}" \
