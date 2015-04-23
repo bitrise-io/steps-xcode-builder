@@ -367,10 +367,7 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "analyze" ]] ; then
   print_and_do_command ${CONFIG_build_tool} \
     ${CONFIG_xcode_project_action} "${projectfile}" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
-    clean analyze \
-    PROVISIONING_PROFILE="${xcode_build_param_prov_profile_UUID}" \
-    CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
-    OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
+    clean analyze
 elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
   print_and_do_command ${CONFIG_build_tool} \
     ${CONFIG_xcode_project_action} "${projectfile}" \
