@@ -375,10 +375,7 @@ elif [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
   print_and_do_command ${CONFIG_build_tool} \
     ${CONFIG_xcode_project_action} "${projectfile}" \
     -scheme "${XCODE_BUILDER_SCHEME}" \
-    clean archive -archivePath "${ARCHIVE_PATH}" \
-    PROVISIONING_PROFILE="${xcode_build_param_prov_profile_UUID}" \
-    CODE_SIGN_IDENTITY="${CERTIFICATE_IDENTITY}" \
-    OTHER_CODE_SIGN_FLAGS="--keychain ${BITRISE_KEYCHAIN}"
+    clean archive -archivePath "${ARCHIVE_PATH}"
 fi
 build_res_code=$?
 echo " (i) build_res_code: ${build_res_code}"
@@ -437,8 +434,7 @@ if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
       -exportArchive \
       -exportFormat ipa \
       -archivePath "${ARCHIVE_PATH}" \
-      -exportPath "${EXPORT_PATH}" \
-      -exportProvisioningProfile "${profile_name}"
+      -exportPath "${EXPORT_PATH}"
     fail_if_cmd_error "Xcode Export Archive action failed!"
 
     echo_string_to_formatted_output "* Archive build success"
