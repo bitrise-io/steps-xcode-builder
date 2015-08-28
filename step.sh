@@ -414,7 +414,7 @@ if [[ "${XCODE_BUILDER_ACTION}" == "archive" ]] ; then
     # Get the name of the profile
     IFS=$'\n'
     embedded_mobile_prov_path=""
-    for a_emb_path in $(find "${ARCHIVE_PATH}/Products/Applications" -type f -ipath '*.app/embedded.mobileprovision')
+    for a_emb_path in $(find "${ARCHIVE_PATH}/Products/Applications" -type f -maxdepth 1 -ipath '*.app/embedded.mobileprovision')
     do
     	echo " * embedded.mobileprovision: ${a_emb_path}"
     	if [ ! -z "${embedded_mobile_prov_path}" ] ; then
